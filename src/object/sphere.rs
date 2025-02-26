@@ -1,6 +1,8 @@
+use std::ops::RangeInclusive;
+
 use nalgebra::Point3;
 
-use crate::ray::Ray;
+use crate::{extensions::ri_surrounds::RangeInclusiveSurroundsExtension, ray::Ray};
 
 use super::hittable_object::{HitRecord, HittableObject};
 
@@ -25,7 +27,7 @@ impl Sphere {
 }
 
 impl HittableObject for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord> {
         let oc = self.center() - ray.origin();
         let a = ray.direction().norm_squared();
         let h = ray.direction().dot(&oc);
@@ -38,10 +40,9 @@ impl HittableObject for Sphere {
 
         // Find nearest root that is in acceptable range
         let mut root = (h - delta_sqrt) / a;
-        let acceptable_range = t_min..=t_max;
-        if !acceptable_range.contains(&root) {
+        if !t_range.surrounds(&root) {
             root = (h - delta_sqrt) / a;
-            if !acceptable_range.contains(&root) {
+            if !t_range.surrounds(&root) {
                 return None;
             }
         }

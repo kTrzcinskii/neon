@@ -1,9 +1,11 @@
+use std::ops::RangeInclusive;
+
 use nalgebra::{Point3, Vector3};
 
 use crate::ray::Ray;
 
 pub trait HittableObject {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord>;
 }
 
 pub struct HitRecord {
