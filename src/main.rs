@@ -2,8 +2,11 @@ use std::{env, fs, io::Write};
 
 use anyhow::{bail, Result};
 use log::info;
-use nalgebra::Vector3;
-use neon::ray::Ray;
+use nalgebra::{Point3, Vector3};
+use neon::{
+    object::{hittable_objects_list::HittableObjectsList, sphere::Sphere},
+    ray::Ray,
+};
 use rgb::Rgb;
 
 struct Dimensions {
@@ -39,13 +42,10 @@ fn main() -> Result<()> {
     let image_dimensions = Dimensions::from_width(IMAGE_WIDTH, ASPECT_RATIO);
     const MAX_COLOR: u8 = 255;
 
-    // Render
-    let mut content = String::new();
-    let headline = format!(
-        "P3\n{} {}\n{}\n",
-        image_dimensions.width, image_dimensions.height, MAX_COLOR
-    );
-    content.push_str(&headline);
+    // World
+    let mut world = HittableObjectsList::new();
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     // Camera
     let focal_length = 1.0;
@@ -72,6 +72,14 @@ fn main() -> Result<()> {
 
     info!("Starting rendering");
 
+    // Render
+    let mut content = String::new();
+    let headline = format!(
+        "P3\n{} {}\n{}\n",
+        image_dimensions.width, image_dimensions.height, MAX_COLOR
+    );
+    content.push_str(&headline);
+
     for j in 0..image_dimensions.height {
         info!("Scanlines remaining: {}", image_dimensions.height - j);
         for i in 0..IMAGE_WIDTH {
@@ -81,7 +89,7 @@ fn main() -> Result<()> {
             let ray_dir = pixel_center - camera_center;
             let ray = Ray::new(camera_center.into(), ray_dir);
 
-            let color = ray.color();
+            let color = ray.color(&world);
             let color: Rgb<u8> = color.iter().map(|c| (c * 255_f64) as u8).collect();
             let line = format!("{} {} {}\n", color.r, color.g, color.b);
             content.push_str(&line);

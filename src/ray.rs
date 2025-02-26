@@ -1,6 +1,8 @@
 use nalgebra::{Point3, Vector3};
 use rgb::Rgb;
 
+use crate::object::hittable_object::HittableObject;
+
 #[derive(Default)]
 pub struct Ray {
     origin: Point3<f64>,
@@ -25,11 +27,10 @@ impl Ray {
         self.origin() + t * self.direction()
     }
 
-    pub fn color(&self) -> Rgb<f64> {
-        let t = self.hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5);
-        if t > 0.0 {
-            let normal = (self.at(t).coords - Vector3::new(0.0, 0.0, -1.0)).normalize();
-            let color = 0.5 * Vector3::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
+    pub fn color(&self, object: &impl HittableObject) -> Rgb<f64> {
+        let hit_record = object.hit(self, 0.0, f64::MAX);
+        if let Some(hit_record) = hit_record {
+            let color = 0.5 * (hit_record.normal() + Vector3::new(1.0, 1.0, 1.0));
             return Rgb {
                 r: color.x,
                 g: color.y,
@@ -46,19 +47,5 @@ impl Ray {
             g: color.y,
             b: color.z,
         }
-    }
-
-    // TODO: this probably shouldn't be in this Impl block, move it later
-    pub fn hit_sphere(&self, center: &Point3<f64>, radius: f64) -> f64 {
-        let oc = center - self.origin();
-        // Becasue dotting vector with itself is same as squared length
-        let a = self.direction().norm_squared();
-        let h = self.direction().dot(&oc);
-        let c = oc.norm_squared() - radius * radius;
-        let delta = h * h - a * c;
-        if delta < 0.0 {
-            return -1.0;
-        }
-        (h - delta.sqrt()) / a
     }
 }
