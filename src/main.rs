@@ -4,6 +4,7 @@ use anyhow::{bail, Result};
 use log::info;
 use nalgebra::Vector3;
 use neon::ray::Ray;
+use rgb::Rgb;
 
 struct Dimensions {
     pub width: u32,
@@ -81,6 +82,7 @@ fn main() -> Result<()> {
             let ray = Ray::new(camera_center.into(), ray_dir);
 
             let color = ray.color();
+            let color: Rgb<u8> = color.iter().map(|c| (c * 255_f64) as u8).collect();
             let line = format!("{} {} {}\n", color.r, color.g, color.b);
             content.push_str(&line);
         }
