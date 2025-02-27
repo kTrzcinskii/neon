@@ -4,9 +4,11 @@ use rand::Rng;
 use rgb::Rgb;
 
 use crate::{
-    extensions::rgb_f64_to_u8::RgbF64ToU8Extension,
+    extensions::{
+        rgb_f64_to_u8::RgbF64ToU8Extension, rgb_linear_to_gamma::RgbLinearToGammaExtension,
+    },
     object::hittable_object::HittableObject,
-    ray::Ray,
+    ray::{ray_generator::RayGenerator, Ray},
     rendered_image::{Dimensions, RenderedImage},
 };
 
@@ -18,10 +20,16 @@ pub struct Camera {
     upper_left_pixel_pos: Point3<f64>,
     pixel_delta_horizontal: Vector3<f64>,
     pixel_delta_vertical: Vector3<f64>,
+    max_bounce_depth: u32,
 }
 
 impl Camera {
-    pub fn new(width: u32, aspect_ratio: f64, samples_per_pixel: u32) -> Self {
+    pub fn new(
+        width: u32,
+        aspect_ratio: f64,
+        samples_per_pixel: u32,
+        max_bounce_depth: u32,
+    ) -> Self {
         let dimensions = Dimensions::from_width(width, aspect_ratio);
 
         let focal_length = 1.0;
@@ -54,6 +62,7 @@ impl Camera {
             upper_left_pixel_pos,
             pixel_delta_horizontal,
             pixel_delta_vertical,
+            max_bounce_depth,
         }
     }
 
@@ -71,12 +80,12 @@ impl Camera {
 
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.create_ray_around_pixel(i, j);
-                    color += Self::calculate_color(&ray, world);
+                    color += self.calculate_color(&ray, world, 0);
                 }
 
                 color *= self.pixel_samples_scale;
 
-                row.push(color.f64_to_u8());
+                row.push(color.linear_to_gamma().f64_to_u8());
             }
             output.push(row);
         }
@@ -89,15 +98,21 @@ impl Camera {
         }
     }
 
-    fn calculate_color(ray: &Ray, object: &impl HittableObject) -> Rgb<f64> {
-        let hit_record = object.hit(ray, 0.0..=f64::MAX);
-        if let Some(hit_record) = hit_record {
-            let color = 0.5 * (hit_record.normal() + Vector3::new(1.0, 1.0, 1.0));
+    fn calculate_color(&self, ray: &Ray, object: &impl HittableObject, depth: u32) -> Rgb<f64> {
+        if depth >= self.max_bounce_depth {
             return Rgb {
-                r: color.x,
-                g: color.y,
-                b: color.z,
+                r: 0.0,
+                g: 0.0,
+                b: 0.0,
             };
+        }
+
+        // We start our range at 0.001 to fix the potential rounding issue, where
+        // ray would reflect in such a way that it would hit the same sphere once again.
+        let hit_record = object.hit(ray, 0.001..=f64::MAX);
+        if let Some(hit_record) = hit_record {
+            let reflected_ray = RayGenerator::random_ray_on_hemisphere(&hit_record);
+            return self.calculate_color(&reflected_ray, object, depth + 1) * 0.5;
         }
 
         let white = Vector3::new(1.0, 1.0, 1.0);

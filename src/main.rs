@@ -26,7 +26,8 @@ fn main() -> Result<()> {
     const WIDTH: u32 = 400;
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const SAMPLES_PER_PIXEL: u32 = 100;
-    let camera = Camera::new(WIDTH, ASPECT_RATIO, SAMPLES_PER_PIXEL);
+    const MAX_BOUNCE_DEPTH: u32 = 10;
+    let camera = Camera::new(WIDTH, ASPECT_RATIO, SAMPLES_PER_PIXEL, MAX_BOUNCE_DEPTH);
     let rendered = camera.render(&world);
 
     // Encode

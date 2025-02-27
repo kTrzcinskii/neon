@@ -1,3 +1,5 @@
+pub mod ray_generator;
+
 use nalgebra::{Point3, Vector3};
 
 pub struct Ray {

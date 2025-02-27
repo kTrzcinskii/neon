@@ -10,15 +10,15 @@ pub trait HittableObject {
 
 pub struct HitRecord {
     pos: Point3<f64>,
-    // This normal vector always points againt the ray
+    /// This normal vector always points againt the ray
     normal: Vector3<f64>,
     t: f64,
-    // True if ray was outside the object
+    /// True if ray was outside the object
     front_face: bool,
 }
 
 impl HitRecord {
-    // `outward_normal` is assumed to be unit vector
+    /// `outward_normal` is assumed to be unit vector
     pub fn new(pos: Point3<f64>, t: f64, outward_normal: Vector3<f64>, ray: &Ray) -> Self {
         let front_face = ray.direction().dot(&outward_normal) < 0.0;
         let normal = if front_face {
