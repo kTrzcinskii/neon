@@ -1,5 +1,6 @@
 use log::info;
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Point3, Vector2, Vector3};
+use rand::Rng;
 use rgb::Rgb;
 
 use crate::{
@@ -12,13 +13,15 @@ use crate::{
 pub struct Camera {
     dimensions: Dimensions,
     center: Point3<f64>,
+    samples_per_pixel: u32,
+    pixel_samples_scale: f64,
     upper_left_pixel_pos: Point3<f64>,
     pixel_delta_horizontal: Vector3<f64>,
     pixel_delta_vertical: Vector3<f64>,
 }
 
 impl Camera {
-    pub fn new(width: u32, aspect_ratio: f64) -> Self {
+    pub fn new(width: u32, aspect_ratio: f64, samples_per_pixel: u32) -> Self {
         let dimensions = Dimensions::from_width(width, aspect_ratio);
 
         let focal_length = 1.0;
@@ -46,6 +49,8 @@ impl Camera {
         Camera {
             dimensions,
             center,
+            samples_per_pixel,
+            pixel_samples_scale: 1.0 / samples_per_pixel as f64,
             upper_left_pixel_pos,
             pixel_delta_horizontal,
             pixel_delta_vertical,
@@ -59,15 +64,18 @@ impl Camera {
 
         for j in 0..self.dimensions.height {
             info!("Scanlines remaining: {}", self.dimensions.height - j);
+
             let mut row = vec![];
             for i in 0..self.dimensions.width {
-                let pixel_center = self.upper_left_pixel_pos
-                    + i as f64 * self.pixel_delta_horizontal
-                    + j as f64 * self.pixel_delta_vertical;
-                let ray_dir = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_dir);
+                let mut color = Rgb::<f64>::new(0.0, 0.0, 0.0);
 
-                let color = Self::calculate_color(&ray, world);
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.create_ray_around_pixel(i, j);
+                    color += Self::calculate_color(&ray, world);
+                }
+
+                color *= self.pixel_samples_scale;
+
                 row.push(color.f64_to_u8());
             }
             output.push(row);
@@ -101,5 +109,25 @@ impl Camera {
             g: color.y,
             b: color.z,
         }
+    }
+
+    fn create_ray_around_pixel(&self, pixel_x: u32, pixel_y: u32) -> Ray {
+        let offset = Self::sample_square();
+
+        let pixel = self.upper_left_pixel_pos
+            + (pixel_x as f64 + offset.x) * self.pixel_delta_horizontal
+            + (pixel_y as f64 + offset.y) * self.pixel_delta_vertical;
+
+        let ray_origin = self.center;
+        let ray_direction = pixel - self.center;
+
+        Ray::new(ray_origin, ray_direction)
+    }
+
+    fn sample_square() -> Vector2<f64> {
+        let mut rng = rand::rng();
+        let f1: f64 = rng.random();
+        let f2: f64 = rng.random();
+        Vector2::new(f1 - 0.5, f2 - 0.5)
     }
 }

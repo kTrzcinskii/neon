@@ -6,6 +6,8 @@ pub trait RgbF64ToU8Extension {
 
 impl RgbF64ToU8Extension for Rgb<f64> {
     fn f64_to_u8(&self) -> Rgb<u8> {
-        self.iter().map(|c| (c * 255_f64) as u8).collect()
+        self.iter()
+            .map(|c| (c * 255_f64).clamp(0.0, 255.0) as u8)
+            .collect()
     }
 }
