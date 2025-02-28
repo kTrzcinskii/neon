@@ -3,7 +3,9 @@ use std::ops::Range;
 use nalgebra::Vector3;
 use rand::Rng;
 
-use crate::object::hittable_object::HitRecord;
+use crate::{
+    extensions::vector_reflection::VectorReflectionExtension, object::hittable_object::HitRecord,
+};
 
 use super::Ray;
 
@@ -17,10 +19,22 @@ impl RayGenerator {
         if direction.dot(hit_record.normal()) < 0.0 {
             direction = -direction;
         }
-        direction += hit_record.normal();
+        direction += hit_record.normal().into_inner();
+        // Fix case of "almost" zero vector
+        if direction.iter().all(|x| x.abs() < 1e-8) {
+            direction = hit_record.normal().into_inner();
+        }
         Ray {
             origin: *hit_record.pos(),
             direction,
+        }
+    }
+
+    pub fn reflected_ray(ray: &Ray, hit_record: &HitRecord) -> Ray {
+        let reflected_direction = ray.direction().reflect(hit_record.normal());
+        Ray {
+            origin: *hit_record.pos(),
+            direction: reflected_direction,
         }
     }
 
