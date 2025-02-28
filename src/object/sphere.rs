@@ -1,20 +1,27 @@
 use std::ops::RangeInclusive;
 
-use nalgebra::Point3;
+use nalgebra::{Point3, Unit, UnitVector3};
 
-use crate::{extensions::ri_surrounds::RangeInclusiveSurroundsExtension, ray::Ray};
+use crate::{
+    extensions::ri_surrounds::RangeInclusiveSurroundsExtension, material::MaterialType, ray::Ray,
+};
 
 use super::hittable_object::{HitRecord, HittableObject};
 
-pub struct Sphere {
+pub struct Sphere<'a> {
     center: Point3<f64>,
     radius: f64,
+    material: &'a MaterialType,
 }
 
-impl Sphere {
-    pub fn new(center: Point3<f64>, radius: f64) -> Self {
+impl<'a> Sphere<'a> {
+    pub fn new(center: Point3<f64>, radius: f64, material: &'a MaterialType) -> Self {
         assert!(radius > 0.0);
-        Sphere { center, radius }
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 
     pub fn center(&self) -> &Point3<f64> {
@@ -26,7 +33,7 @@ impl Sphere {
     }
 }
 
-impl HittableObject for Sphere {
+impl HittableObject for Sphere<'_> {
     fn hit(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord> {
         let oc = self.center() - ray.origin();
         let a = ray.direction().norm_squared();
@@ -50,8 +57,10 @@ impl HittableObject for Sphere {
         let hit_point = ray.at(root);
         // This is unit vector thanks to dividing it by radius
         let outward_normal = (hit_point - self.center()) / self.radius();
+        // We know its normalize so we skip checking part to gain some performance boost
+        let unit_outward_normal: UnitVector3<f64> = Unit::new_unchecked(outward_normal);
 
-        let hit_record = HitRecord::new(hit_point, root, outward_normal, ray);
+        let hit_record = HitRecord::new(hit_point, root, unit_outward_normal, ray, self.material);
         Some(hit_record)
     }
 }

@@ -7,8 +7,9 @@ use crate::{
     extensions::{
         rgb_f64_to_u8::RgbF64ToU8Extension, rgb_linear_to_gamma::RgbLinearToGammaExtension,
     },
+    material::Material,
     object::hittable_object::HittableObject,
-    ray::{ray_generator::RayGenerator, Ray},
+    ray::Ray,
     rendered_image::{Dimensions, RenderedImage},
 };
 
@@ -111,8 +112,28 @@ impl Camera {
         // ray would reflect in such a way that it would hit the same sphere once again.
         let hit_record = object.hit(ray, 0.001..=f64::MAX);
         if let Some(hit_record) = hit_record {
-            let reflected_ray = RayGenerator::random_ray_on_hemisphere(&hit_record);
-            return self.calculate_color(&reflected_ray, object, depth + 1) * 0.5;
+            match hit_record.material_type().scatter(ray, &hit_record) {
+                Some(material_scattering) => {
+                    let next_color = self.calculate_color(
+                        material_scattering.scattered_ray(),
+                        object,
+                        depth + 1,
+                    );
+                    let final_color: Rgb<f64> = next_color
+                        .iter()
+                        .zip(material_scattering.attenuation().iter())
+                        .map(|(x, y)| x * y)
+                        .collect();
+                    return final_color;
+                }
+                None => {
+                    return Rgb {
+                        r: 0.0,
+                        g: 0.0,
+                        b: 0.0,
+                    };
+                }
+            }
         }
 
         let white = Vector3::new(1.0, 1.0, 1.0);

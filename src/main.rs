@@ -5,8 +5,10 @@ use nalgebra::Point3;
 use neon::{
     camera::Camera,
     encoder::{ppm_encoder::PpmEncoder, rendered_image_encoder::RenderedImageEncoder},
-    object::{hittable_objects_list::HittableObjectsList, sphere::Sphere},
+    material::{lambertian::Lambertian, metal::Metal, MaterialType},
+    object::{hittable_objects_list::HittableObjectsList, sphere::Sphere, HittableObjectType},
 };
+use rgb::Rgb;
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -17,10 +19,34 @@ fn main() -> Result<()> {
     }
     let output_path = &args[1];
 
+    // Materials
+    let material_ground = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.8, 0.8, 0.0)));
+    let material_center = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.1, 0.2, 0.5)));
+    let material_left = MaterialType::Metal(Metal::new(Rgb::new(0.8, 0.8, 0.8)));
+    let material_right = MaterialType::Metal(Metal::new(Rgb::new(0.8, 0.6, 0.2)));
+
     // World
     let mut world = HittableObjectsList::new();
-    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+    world.add(HittableObjectType::Sphere(Sphere::new(
+        Point3::new(0.0, -100.5, -1.0),
+        100.0,
+        &material_ground,
+    )));
+    world.add(HittableObjectType::Sphere(Sphere::new(
+        Point3::new(0.0, 0.0, -1.2),
+        0.5,
+        &material_center,
+    )));
+    world.add(HittableObjectType::Sphere(Sphere::new(
+        Point3::new(-1.0, 0.0, -1.0),
+        0.5,
+        &material_left,
+    )));
+    world.add(HittableObjectType::Sphere(Sphere::new(
+        Point3::new(1.0, 0.0, -1.0),
+        0.5,
+        &material_right,
+    )));
 
     // Camera
     const WIDTH: u32 = 400;

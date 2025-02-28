@@ -1,22 +1,25 @@
 use std::ops::RangeInclusive;
 
-use super::hittable_object::{HitRecord, HittableObject};
+use super::{
+    hittable_object::{HitRecord, HittableObject},
+    HittableObjectType,
+};
 
-pub struct HittableObjectsList {
-    items: Vec<Box<dyn HittableObject>>,
+pub struct HittableObjectsList<'a> {
+    items: Vec<HittableObjectType<'a>>,
 }
 
-impl HittableObjectsList {
+impl<'a> HittableObjectsList<'a> {
     pub fn new() -> Self {
         HittableObjectsList { items: vec![] }
     }
 
-    pub fn add(&mut self, item: Box<dyn HittableObject>) {
+    pub fn add(&mut self, item: HittableObjectType<'a>) {
         self.items.push(item);
     }
 }
 
-impl HittableObject for HittableObjectsList {
+impl HittableObject for HittableObjectsList<'_> {
     fn hit(&self, ray: &crate::ray::Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord> {
         let mut closest_hit: Option<HitRecord> = None;
         let mut closest_t = *t_range.end();
@@ -33,13 +36,13 @@ impl HittableObject for HittableObjectsList {
     }
 }
 
-impl From<Vec<Box<dyn HittableObject>>> for HittableObjectsList {
-    fn from(value: Vec<Box<dyn HittableObject>>) -> Self {
+impl<'a> From<Vec<HittableObjectType<'a>>> for HittableObjectsList<'a> {
+    fn from(value: Vec<HittableObjectType<'a>>) -> Self {
         HittableObjectsList { items: value }
     }
 }
 
-impl Default for HittableObjectsList {
+impl Default for HittableObjectsList<'_> {
     fn default() -> Self {
         Self::new()
     }

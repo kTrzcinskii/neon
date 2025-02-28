@@ -1,25 +1,32 @@
 use std::ops::RangeInclusive;
 
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Point3, UnitVector3};
 
-use crate::ray::Ray;
+use crate::{material::MaterialType, ray::Ray};
 
 pub trait HittableObject {
     fn hit(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord>;
 }
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pos: Point3<f64>,
     /// This normal vector always points againt the ray
-    normal: Vector3<f64>,
+    normal: UnitVector3<f64>,
     t: f64,
     /// True if ray was outside the object
     front_face: bool,
+    material: &'a MaterialType,
 }
 
-impl HitRecord {
+impl<'a> HitRecord<'a> {
     /// `outward_normal` is assumed to be unit vector
-    pub fn new(pos: Point3<f64>, t: f64, outward_normal: Vector3<f64>, ray: &Ray) -> Self {
+    pub fn new(
+        pos: Point3<f64>,
+        t: f64,
+        outward_normal: UnitVector3<f64>,
+        ray: &Ray,
+        material: &'a MaterialType,
+    ) -> Self {
         let front_face = ray.direction().dot(&outward_normal) < 0.0;
         let normal = if front_face {
             outward_normal
@@ -31,6 +38,7 @@ impl HitRecord {
             normal,
             t,
             front_face,
+            material,
         }
     }
 
@@ -38,7 +46,7 @@ impl HitRecord {
         &self.pos
     }
 
-    pub fn normal(&self) -> &Vector3<f64> {
+    pub fn normal(&self) -> &UnitVector3<f64> {
         &self.normal
     }
 
@@ -48,5 +56,9 @@ impl HitRecord {
 
     pub fn front_face(&self) -> bool {
         self.front_face
+    }
+
+    pub fn material_type(&self) -> &MaterialType {
+        self.material
     }
 }
