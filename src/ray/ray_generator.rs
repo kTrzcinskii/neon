@@ -38,6 +38,18 @@ impl RayGenerator {
         }
     }
 
+    pub fn fuzzed_ray(ray: &Ray, fuzziness: f64) -> Ray {
+        if fuzziness == 0.0 {
+            return *ray;
+        }
+        let fuzzed_direction =
+            ray.direction().normalize() + fuzziness * Self::random_unit_vector3();
+        Ray {
+            direction: fuzzed_direction,
+            origin: *ray.origin(),
+        }
+    }
+
     fn random_vector3(range: Range<f64>) -> Vector3<f64> {
         let mut rng = rand::rng();
         Vector3::new(

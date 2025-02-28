@@ -2,6 +2,7 @@ pub mod ray_generator;
 
 use nalgebra::{Point3, Vector3};
 
+#[derive(Clone, Copy)]
 pub struct Ray {
     origin: Point3<f64>,
     direction: Vector3<f64>,
