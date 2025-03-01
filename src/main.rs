@@ -5,7 +5,7 @@ use nalgebra::Point3;
 use neon::{
     camera::Camera,
     encoder::{ppm_encoder::PpmEncoder, rendered_image_encoder::RenderedImageEncoder},
-    material::{lambertian::Lambertian, metal::Metal, MaterialType},
+    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     object::{hittable_objects_list::HittableObjectsList, sphere::Sphere, HittableObjectType},
 };
 use rgb::Rgb;
@@ -22,7 +22,9 @@ fn main() -> Result<()> {
     // Materials
     let material_ground = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.8, 0.8, 0.0)));
     let material_center = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.1, 0.2, 0.5)));
-    let material_left = MaterialType::Metal(Metal::new(Rgb::new(0.8, 0.8, 0.8), 0.01));
+    // glass-like dielectric
+    let material_left = MaterialType::Dielectric(Dielectric::new(1.5));
+    let material_bubble = MaterialType::Dielectric(Dielectric::new(1.0 / 1.5));
     let material_right = MaterialType::Metal(Metal::new(Rgb::new(0.8, 0.6, 0.2), 0.8));
 
     // World
@@ -37,10 +39,16 @@ fn main() -> Result<()> {
         0.5,
         &material_center,
     )));
+    // Air bubble inside glass sphere
     world.add(HittableObjectType::Sphere(Sphere::new(
         Point3::new(-1.0, 0.0, -1.0),
         0.5,
         &material_left,
+    )));
+    world.add(HittableObjectType::Sphere(Sphere::new(
+        Point3::new(-1.0, 0.0, -1.0),
+        0.35,
+        &material_bubble,
     )));
     world.add(HittableObjectType::Sphere(Sphere::new(
         Point3::new(1.0, 0.0, -1.0),
@@ -52,7 +60,7 @@ fn main() -> Result<()> {
     const WIDTH: u32 = 400;
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const SAMPLES_PER_PIXEL: u32 = 100;
-    const MAX_BOUNCE_DEPTH: u32 = 10;
+    const MAX_BOUNCE_DEPTH: u32 = 20;
     let camera = Camera::new(WIDTH, ASPECT_RATIO, SAMPLES_PER_PIXEL, MAX_BOUNCE_DEPTH);
     let rendered = camera.render(&world);
 

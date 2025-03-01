@@ -1,6 +1,8 @@
+pub mod dielectric;
 pub mod lambertian;
 pub mod metal;
 
+use dielectric::Dielectric;
 use lambertian::Lambertian;
 use metal::Metal;
 use rgb::Rgb;
@@ -14,6 +16,7 @@ pub trait Material {
 pub enum MaterialType {
     Lambertian(Lambertian),
     Metal(Metal),
+    Dielectric(Dielectric),
 }
 
 impl Material for MaterialType {
@@ -21,6 +24,7 @@ impl Material for MaterialType {
         match self {
             MaterialType::Lambertian(lambertian) => lambertian.scatter(ray, hit_record),
             MaterialType::Metal(metal) => metal.scatter(ray, hit_record),
+            MaterialType::Dielectric(dielectric) => dielectric.scatter(ray, hit_record),
         }
     }
 }

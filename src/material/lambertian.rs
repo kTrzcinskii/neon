@@ -20,10 +20,7 @@ impl Lambertian {
 impl Material for Lambertian {
     fn scatter(&self, _: &Ray, hit_record: &HitRecord) -> Option<MaterialScattering> {
         let scattered_ray = RayGenerator::random_ray_on_hemisphere(hit_record);
-        let material_scattering = MaterialScattering {
-            attenuation: self.albedo,
-            scattered_ray,
-        };
+        let material_scattering = MaterialScattering::new(self.albedo, scattered_ray);
         Some(material_scattering)
     }
 }

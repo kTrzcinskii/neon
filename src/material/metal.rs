@@ -26,10 +26,7 @@ impl Material for Metal {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<MaterialScattering> {
         let reflected_ray = RayGenerator::reflected_ray(ray, hit_record);
         let scattered_ray = RayGenerator::fuzzed_ray(&reflected_ray, self.fuzziness);
-        let material_scattering = MaterialScattering {
-            attenuation: self.albedo,
-            scattered_ray,
-        };
+        let material_scattering = MaterialScattering::new(self.albedo, scattered_ray);
         // In case when fuzzed ray gets below surface we just don't return it
         // (so surface absorbs it).
         if scattered_ray.direction().dot(hit_record.normal()) > 0.0 {
