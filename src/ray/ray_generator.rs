@@ -1,6 +1,3 @@
-use std::ops::Range;
-
-use nalgebra::Vector3;
 use rand::Rng;
 
 use crate::{
@@ -8,6 +5,7 @@ use crate::{
         vector_reflection::VectorReflectionExtension, vector_refraction::VectorRefractionExtension,
     },
     object::hittable_object::HitRecord,
+    random_vector_generator,
 };
 
 use super::Ray;
@@ -18,7 +16,7 @@ impl RayGenerator {
     /// Returns a random `Ray` that is on the same hemisphere as
     /// the normal of the `hit_record`.
     pub fn random_ray_on_hemisphere(hit_record: &HitRecord) -> Ray {
-        let mut direction = Self::random_unit_vector3();
+        let mut direction = random_vector_generator::random_unit_vector3_in_sphere();
         if direction.dot(hit_record.normal()) < 0.0 {
             direction = -direction;
         }
@@ -39,8 +37,8 @@ impl RayGenerator {
         if fuzziness == 0.0 {
             return *ray;
         }
-        let fuzzed_direction =
-            ray.direction().normalize() + fuzziness * Self::random_unit_vector3();
+        let fuzzed_direction = ray.direction().normalize()
+            + fuzziness * random_vector_generator::random_unit_vector3_in_sphere();
         Ray::new(*ray.origin(), fuzzed_direction)
     }
 
@@ -68,28 +66,6 @@ impl RayGenerator {
             .direction()
             .refract(hit_record.normal(), refraction_index);
         Some(Ray::new(*hit_record.pos(), refracted_direction))
-    }
-
-    fn random_vector3(range: Range<f64>) -> Vector3<f64> {
-        let mut rng = rand::rng();
-        Vector3::new(
-            rng.random_range(range.clone()),
-            rng.random_range(range.clone()),
-            rng.random_range(range),
-        )
-    }
-
-    /// Returns Vector3<f64> that is inside a unit sphere.
-    /// We just keep generating random vectors inside 1-by-1-by cube
-    /// until we find one that satisfies us.
-    fn random_unit_vector3() -> Vector3<f64> {
-        loop {
-            let p = Self::random_vector3(-1.0..1.0);
-            let len_squared = p.norm_squared();
-            if (1e-160..=1.0).contains(&len_squared) {
-                return p / len_squared.sqrt();
-            }
-        }
     }
 
     /// Uses schlick approximation to calculate reflectance, which is probabilty that the light would reflect.
