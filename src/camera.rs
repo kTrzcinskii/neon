@@ -2,6 +2,7 @@ use log::info;
 use nalgebra::{Point3, Vector2, Vector3};
 use rand::Rng;
 use rgb::Rgb;
+use typed_builder::TypedBuilder;
 
 use crate::{
     extensions::{
@@ -13,60 +14,34 @@ use crate::{
     rendered_image::{Dimensions, RenderedImage},
 };
 
+#[derive(TypedBuilder)]
+#[builder(build_method(vis="", name=__build))]
 pub struct Camera {
+    #[builder(default = 400, setter(into))]
+    width: u32,
+    #[builder(default, setter(skip))]
     dimensions: Dimensions,
+    #[builder(default, setter(into))]
     center: Point3<f64>,
+    #[builder(default = 100, setter(into))]
     samples_per_pixel: u32,
+    #[builder(default, setter(skip))]
     pixel_samples_scale: f64,
+    #[builder(default, setter(skip))]
     upper_left_pixel_pos: Point3<f64>,
+    #[builder(default, setter(skip))]
     pixel_delta_horizontal: Vector3<f64>,
+    #[builder(default, setter(skip))]
     pixel_delta_vertical: Vector3<f64>,
+    #[builder(default = 10, setter(into))]
     max_bounce_depth: u32,
+    #[builder(default = 90.0, setter(into))]
+    vertical_fov_angles: f64,
+    #[builder(default = 16.0 / 9.0, setter(into))]
+    aspect_ratio: f64,
 }
 
 impl Camera {
-    pub fn new(
-        width: u32,
-        aspect_ratio: f64,
-        samples_per_pixel: u32,
-        max_bounce_depth: u32,
-    ) -> Self {
-        let dimensions = Dimensions::from_width(width, aspect_ratio);
-
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
-        // We don't use aspect ratio here as it might not be what real ratio between width and height is
-        let viewport_width = viewport_height * dimensions.ratio();
-        let center = Point3::new(0.0, 0.0, 0.0);
-
-        // Vectors across horizontal and down the vertical viewport edges
-        let viewport_horizontal = Vector3::new(viewport_width, 0.0, 0.0);
-        let viewport_vertical = Vector3::new(0.0, -viewport_height, 0.0);
-
-        // Pixel deltas across horizontal and verctial viewport edges
-        let pixel_delta_horizontal = viewport_horizontal / dimensions.width as f64;
-        let pixel_delta_vertical = viewport_vertical / dimensions.height as f64;
-
-        // Upper left pixel
-        let viewport_upper_left = center
-            - Vector3::new(0.0, 0.0, focal_length)
-            - viewport_horizontal / 2.0
-            - viewport_vertical / 2.0;
-        let upper_left_pixel_pos =
-            viewport_upper_left + 0.5 * (pixel_delta_horizontal + pixel_delta_vertical);
-
-        Camera {
-            dimensions,
-            center,
-            samples_per_pixel,
-            pixel_samples_scale: 1.0 / samples_per_pixel as f64,
-            upper_left_pixel_pos,
-            pixel_delta_horizontal,
-            pixel_delta_vertical,
-            max_bounce_depth,
-        }
-    }
-
     pub fn render(&self, world: &impl HittableObject) -> RenderedImage {
         let mut output = vec![vec![]];
 
@@ -165,5 +140,58 @@ impl Camera {
         let f1: f64 = rng.random();
         let f2: f64 = rng.random();
         Vector2::new(f1 - 0.5, f2 - 0.5)
+    }
+}
+
+#[allow(non_camel_case_types)]
+impl<
+        __width: typed_builder::Optional<u32>,
+        __center: typed_builder::Optional<nalgebra::OPoint<f64, nalgebra::Const<3>>>,
+        __samples_per_pixel: typed_builder::Optional<u32>,
+        __max_bounce_depth: typed_builder::Optional<u32>,
+        __vertical_fov_angles: typed_builder::Optional<f64>,
+        __aspect_ratio: typed_builder::Optional<f64>,
+    >
+    CameraBuilder<(
+        __width,
+        __center,
+        __samples_per_pixel,
+        __max_bounce_depth,
+        __vertical_fov_angles,
+        __aspect_ratio,
+    )>
+{
+    pub fn build(self) -> Camera {
+        let mut camera = self.__build();
+
+        camera.dimensions = Dimensions::from_width(camera.width, camera.aspect_ratio);
+
+        let focal_length = 1.0;
+        let theta = camera.vertical_fov_angles.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
+        // We don't use aspect ratio here as it might not be what real ratio between width and height is
+        let viewport_width = viewport_height * camera.dimensions.ratio();
+        let center = Point3::new(0.0, 0.0, 0.0);
+
+        // Vectors across horizontal and down the vertical viewport edges
+        let viewport_horizontal = Vector3::new(viewport_width, 0.0, 0.0);
+        let viewport_vertical = Vector3::new(0.0, -viewport_height, 0.0);
+
+        // Pixel deltas across horizontal and verctial viewport edges
+        camera.pixel_delta_horizontal = viewport_horizontal / camera.dimensions.width as f64;
+        camera.pixel_delta_vertical = viewport_vertical / camera.dimensions.height as f64;
+
+        // Upper left pixel
+        let viewport_upper_left = center
+            - Vector3::new(0.0, 0.0, focal_length)
+            - viewport_horizontal / 2.0
+            - viewport_vertical / 2.0;
+        camera.upper_left_pixel_pos = viewport_upper_left
+            + 0.5 * (camera.pixel_delta_horizontal + camera.pixel_delta_vertical);
+
+        camera.pixel_samples_scale = 1.0 / camera.samples_per_pixel as f64;
+
+        camera
     }
 }

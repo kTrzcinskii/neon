@@ -1,6 +1,6 @@
 use rgb::Rgb;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Dimensions {
     pub width: u32,
     pub height: u32,
