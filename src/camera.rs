@@ -1,5 +1,5 @@
 use log::info;
-use nalgebra::{Point3, Vector2, Vector3};
+use nalgebra::{Point3, Unit, UnitVector3, Vector2, Vector3};
 use rand::Rng;
 use rgb::Rgb;
 use typed_builder::TypedBuilder;
@@ -23,6 +23,16 @@ pub struct Camera {
     dimensions: Dimensions,
     #[builder(default, setter(into))]
     center: Point3<f64>,
+    #[builder(default = Point3::new(0.0, 0.0, -1.0), setter(into))]
+    look_at: Point3<f64>,
+    #[builder(default = Vector3::new(0.0, 1.0, 0.0), setter(into))]
+    relative_up: Vector3<f64>,
+    #[builder(default = UnitVector3::new_unchecked(Vector3::new(1.0, 0.0, 0.0)), setter(skip))]
+    right: UnitVector3<f64>,
+    #[builder(default = UnitVector3::new_unchecked(Vector3::new(0.0, 1.0, 0.0)), setter(skip))]
+    up: UnitVector3<f64>,
+    #[builder(default = UnitVector3::new_unchecked(Vector3::new(0.0, 0.0, -1.0)), setter(skip))]
+    at: UnitVector3<f64>,
     #[builder(default = 100, setter(into))]
     samples_per_pixel: u32,
     #[builder(default, setter(skip))]
@@ -147,6 +157,15 @@ impl Camera {
 impl<
         __width: typed_builder::Optional<u32>,
         __center: typed_builder::Optional<nalgebra::OPoint<f64, nalgebra::Const<3>>>,
+        __look_at: typed_builder::Optional<nalgebra::OPoint<f64, nalgebra::Const<3>>>,
+        __relative_up: typed_builder::Optional<
+            nalgebra::Matrix<
+                f64,
+                nalgebra::Const<3>,
+                nalgebra::Const<1>,
+                nalgebra::ArrayStorage<f64, 3, 1>,
+            >,
+        >,
         __samples_per_pixel: typed_builder::Optional<u32>,
         __max_bounce_depth: typed_builder::Optional<u32>,
         __vertical_fov_angles: typed_builder::Optional<f64>,
@@ -155,6 +174,8 @@ impl<
     CameraBuilder<(
         __width,
         __center,
+        __look_at,
+        __relative_up,
         __samples_per_pixel,
         __max_bounce_depth,
         __vertical_fov_angles,
@@ -166,7 +187,7 @@ impl<
 
         camera.dimensions = Dimensions::from_width(camera.width, camera.aspect_ratio);
 
-        let focal_length = 1.0;
+        let focal_length = (camera.center - camera.look_at).norm();
         let theta = camera.vertical_fov_angles.to_radians();
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * focal_length;
@@ -174,9 +195,14 @@ impl<
         let viewport_width = viewport_height * camera.dimensions.ratio();
         let center = Point3::new(0.0, 0.0, 0.0);
 
+        // Calculate camera vectors
+        camera.at = Unit::new_normalize(camera.center - camera.look_at);
+        camera.right = Unit::new_normalize(camera.relative_up.cross(&camera.at));
+        camera.up = Unit::new_normalize(camera.at.cross(&camera.right));
+
         // Vectors across horizontal and down the vertical viewport edges
-        let viewport_horizontal = Vector3::new(viewport_width, 0.0, 0.0);
-        let viewport_vertical = Vector3::new(0.0, -viewport_height, 0.0);
+        let viewport_horizontal = viewport_width * camera.right.into_inner();
+        let viewport_vertical = -viewport_height * camera.up.into_inner();
 
         // Pixel deltas across horizontal and verctial viewport edges
         camera.pixel_delta_horizontal = viewport_horizontal / camera.dimensions.width as f64;
@@ -184,7 +210,7 @@ impl<
 
         // Upper left pixel
         let viewport_upper_left = center
-            - Vector3::new(0.0, 0.0, focal_length)
+            - focal_length * camera.at.into_inner()
             - viewport_horizontal / 2.0
             - viewport_vertical / 2.0;
         camera.upper_left_pixel_pos = viewport_upper_left
