@@ -61,15 +61,17 @@ fn main() -> Result<()> {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const SAMPLES_PER_PIXEL: u32 = 100;
     const MAX_BOUNCE_DEPTH: u32 = 50;
-    const V_FOV: f64 = 90.0;
+    const V_FOV: f64 = 30.0;
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
         .samples_per_pixel(SAMPLES_PER_PIXEL)
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
-        .center(Point3::new(-2.0, 5.0, 4.0))
+        .center(Point3::new(-2.0, 4.0, 4.0))
         .look_at(Point3::new(0.0, 0.0, -2.0))
+        .defocus_angle(0.3)
+        .focus_distance(6.0)
         .build();
     let rendered = camera.render(&world);
 

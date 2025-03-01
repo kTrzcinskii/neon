@@ -10,6 +10,7 @@ use crate::{
     },
     material::Material,
     object::hittable_object::HittableObject,
+    random_vector_generator,
     ray::Ray,
     rendered_image::{Dimensions, RenderedImage},
 };
@@ -49,6 +50,14 @@ pub struct Camera {
     vertical_fov_angles: f64,
     #[builder(default = 16.0 / 9.0, setter(into))]
     aspect_ratio: f64,
+    /// Variation angle of rays through each pixel
+    #[builder(default = 0.0, setter(into))]
+    defocus_angle: f64,
+    /// Distance from camera center to plane of perfect focus
+    #[builder(default = 10.0, setter(into))]
+    focus_distance: f64,
+    #[builder(default, setter(skip))]
+    defocus_disk: DefocusDisk,
 }
 
 impl Camera {
@@ -132,6 +141,8 @@ impl Camera {
         }
     }
 
+    /// Create ray originating in a defocus disk and directed and random pixel around
+    /// viewport pixel (i, j)
     fn create_ray_around_pixel(&self, pixel_x: u32, pixel_y: u32) -> Ray {
         let offset = Self::sample_square();
 
@@ -139,7 +150,12 @@ impl Camera {
             + (pixel_x as f64 + offset.x) * self.pixel_delta_horizontal
             + (pixel_y as f64 + offset.y) * self.pixel_delta_vertical;
 
-        let ray_origin = self.center;
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
+        } else {
+            self.defocus_disk_sample()
+        };
+
         let ray_direction = pixel - self.center;
 
         Ray::new(ray_origin, ray_direction)
@@ -150,6 +166,13 @@ impl Camera {
         let f1: f64 = rng.random();
         let f2: f64 = rng.random();
         Vector2::new(f1 - 0.5, f2 - 0.5)
+    }
+
+    fn defocus_disk_sample(&self) -> Point3<f64> {
+        let p = random_vector_generator::random_unit_vector2_in_disk();
+        self.center
+            + p.x * self.defocus_disk.horizontal_radius
+            + p.y * self.defocus_disk.vertical_radius
     }
 }
 
@@ -170,6 +193,8 @@ impl<
         __max_bounce_depth: typed_builder::Optional<u32>,
         __vertical_fov_angles: typed_builder::Optional<f64>,
         __aspect_ratio: typed_builder::Optional<f64>,
+        __defocus_angle: typed_builder::Optional<f64>,
+        __focus_distance: typed_builder::Optional<f64>,
     >
     CameraBuilder<(
         __width,
@@ -180,6 +205,8 @@ impl<
         __max_bounce_depth,
         __vertical_fov_angles,
         __aspect_ratio,
+        __defocus_angle,
+        __focus_distance,
     )>
 {
     pub fn build(self) -> Camera {
@@ -187,10 +214,9 @@ impl<
 
         camera.dimensions = Dimensions::from_width(camera.width, camera.aspect_ratio);
 
-        let focal_length = (camera.center - camera.look_at).norm();
         let theta = camera.vertical_fov_angles.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * camera.focus_distance;
         // We don't use aspect ratio here as it might not be what real ratio between width and height is
         let viewport_width = viewport_height * camera.dimensions.ratio();
         let center = Point3::new(0.0, 0.0, 0.0);
@@ -210,7 +236,7 @@ impl<
 
         // Upper left pixel
         let viewport_upper_left = center
-            - focal_length * camera.at.into_inner()
+            - camera.focus_distance * camera.at.into_inner()
             - viewport_horizontal / 2.0
             - viewport_vertical / 2.0;
         camera.upper_left_pixel_pos = viewport_upper_left
@@ -218,6 +244,20 @@ impl<
 
         camera.pixel_samples_scale = 1.0 / camera.samples_per_pixel as f64;
 
+        // Calculate defocus disk
+        let defocus_radius =
+            camera.focus_distance * (camera.defocus_angle / 2.0).to_radians().tan();
+        camera.defocus_disk = DefocusDisk {
+            horizontal_radius: camera.right.into_inner() * defocus_radius,
+            vertical_radius: camera.up.into_inner() * defocus_radius,
+        };
+
         camera
     }
+}
+
+#[derive(Default)]
+struct DefocusDisk {
+    horizontal_radius: Vector3<f64>,
+    vertical_radius: Vector3<f64>,
 }
