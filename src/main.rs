@@ -7,8 +7,62 @@ use neon::{
     encoder::{ppm_encoder::PpmEncoder, rendered_image_encoder::RenderedImageEncoder},
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     object::{hittable_objects_list::HittableObjectsList, sphere::Sphere, HittableObjectType},
+    random_vector_generator,
 };
+use rand::Rng;
 use rgb::Rgb;
+
+fn generate_random_materials(rows: usize, cols: usize) -> Vec<MaterialType> {
+    let count = rows * cols;
+    (0..count)
+        .map(|_| {
+            let mut rng = rand::rng();
+            let choose_material: f64 = rng.random();
+            if choose_material < 0.8 {
+                let color_vec = random_vector_generator::random_vector3(0.0..1.0);
+                let albedo: Rgb<f64> = color_vec
+                    .iter()
+                    .zip(color_vec.iter())
+                    .map(|(x, y)| x * y)
+                    .collect();
+                MaterialType::Lambertian(Lambertian::new(albedo))
+            } else if choose_material < 0.95 {
+                let albedo: Rgb<f64> = random_vector_generator::random_vector3(0.5..1.0)
+                    .into_iter()
+                    .copied()
+                    .collect();
+                let fuzziness: f64 = rng.random();
+                MaterialType::Metal(Metal::new(albedo, fuzziness))
+            } else {
+                MaterialType::Dielectric(Dielectric::new(1.5))
+            }
+        })
+        .collect()
+}
+
+fn generate_random_spheres(
+    rows: usize,
+    cols: usize,
+    materials: &[MaterialType],
+) -> Vec<HittableObjectType<'_>> {
+    let mut output = Vec::with_capacity(materials.len());
+    let half_rows = (rows as f64 / 2.0) as i32;
+    let half_cols = (cols as f64 / 2.0) as i32;
+    for i in -half_rows..half_rows {
+        for j in -half_cols..half_cols {
+            let mut rng = rand::rng();
+            let center = Point3::new(
+                i as f64 + 0.9 * rng.random::<f64>(),
+                0.2,
+                j as f64 + 0.9 * rng.random::<f64>(),
+            );
+            let id = (i + half_rows) as usize * rows + (j + half_rows) as usize;
+            let obj = HittableObjectType::Sphere(Sphere::new(center, 0.2, &materials[id]));
+            output.push(obj);
+        }
+    }
+    output
+}
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -19,59 +73,64 @@ fn main() -> Result<()> {
     }
     let output_path = &args[1];
 
+    // Config
+    const ROWS: usize = 24;
+    const COLS: usize = 24;
+
     // Materials
-    let material_ground = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.8, 0.8, 0.0)));
-    let material_center = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.1, 0.2, 0.5)));
-    // glass-like dielectric
-    let material_left = MaterialType::Dielectric(Dielectric::new(1.5));
-    let material_bubble = MaterialType::Dielectric(Dielectric::new(1.0 / 1.5));
-    let material_right = MaterialType::Metal(Metal::new(Rgb::new(0.8, 0.6, 0.2), 0.8));
+    let material_ground = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.5, 0.5, 0.5)));
+    let random_materials = generate_random_materials(ROWS, COLS);
 
     // World
-    let mut world = HittableObjectsList::new();
+    let spheres = generate_random_spheres(ROWS, COLS, &random_materials);
+    let mut world = HittableObjectsList::from(spheres);
     world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(0.0, -100.5, -1.0),
-        100.0,
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
         &material_ground,
     )));
+
+    let glass = MaterialType::Dielectric(Dielectric::new(1.5));
     world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(0.0, 0.0, -1.2),
-        0.5,
-        &material_center,
+        Point3::new(0.0, 1.0, 0.0),
+        1.0,
+        &glass,
     )));
-    // Air bubble inside glass sphere
+
+    let lambertian = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.4, 0.2, 0.1)));
     world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(-1.0, 0.0, -1.0),
-        0.5,
-        &material_left,
+        Point3::new(-4.0, 1.0, 0.0),
+        1.0,
+        &lambertian,
     )));
+
+    let metal = MaterialType::Metal(Metal::new(Rgb::new(0.7, 0.6, 0.5), 0.0));
     world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(-1.0, 0.0, -1.0),
-        0.35,
-        &material_bubble,
-    )));
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(1.0, 0.0, -1.0),
-        0.5,
-        &material_right,
+        Point3::new(4.0, 1.0, 0.0),
+        1.0,
+        &metal,
     )));
 
     // Camera
-    const WIDTH: u32 = 400;
+    const WIDTH: u32 = 1200;
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const SAMPLES_PER_PIXEL: u32 = 100;
+    const SAMPLES_PER_PIXEL: u32 = 500;
     const MAX_BOUNCE_DEPTH: u32 = 50;
-    const V_FOV: f64 = 30.0;
+    const V_FOV: f64 = 20.0;
+    const CENTER: Point3<f64> = Point3::new(13.0, 2.0, 3.0);
+    const LOOK_AT: Point3<f64> = Point3::new(0.0, 0.0, 0.0);
+    const DEFOCUS_ANGLE: f64 = 0.6;
+    const FOCUS_DISTANCE: f64 = 10.0;
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
         .samples_per_pixel(SAMPLES_PER_PIXEL)
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
-        .center(Point3::new(-2.0, 4.0, 4.0))
-        .look_at(Point3::new(0.0, 0.0, -2.0))
-        .defocus_angle(0.3)
-        .focus_distance(6.0)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .defocus_angle(DEFOCUS_ANGLE)
+        .focus_distance(FOCUS_DISTANCE)
         .build();
     let rendered = camera.render(&world);
 
