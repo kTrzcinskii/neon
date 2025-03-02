@@ -16,6 +16,10 @@ impl Dimensions {
     pub fn ratio(&self) -> f64 {
         self.width as f64 / self.height as f64
     }
+
+    pub fn all_elements(&self) -> u32 {
+        self.width * self.height
+    }
 }
 
 pub struct RenderedImage {

@@ -1,6 +1,9 @@
+use std::{sync::mpsc::channel, thread};
+
 use log::info;
 use nalgebra::{Point3, Unit, UnitVector3, Vector2, Vector3};
 use rand::Rng;
+use rayon::prelude::*;
 use rgb::Rgb;
 use typed_builder::TypedBuilder;
 
@@ -61,34 +64,56 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn render(&self, world: &impl HittableObject) -> RenderedImage {
-        let mut output = vec![vec![]];
+    pub fn render<HO>(&self, world: &HO) -> RenderedImage
+    where
+        HO: HittableObject + Sync,
+    {
+        let (tx, rx) = channel::<()>();
 
         info!("Starting rendering");
 
-        for j in 0..self.dimensions.height {
-            info!("Scanlines remaining: {}", self.dimensions.height - j);
-
-            let mut row = vec![];
-            for i in 0..self.dimensions.width {
-                let mut color = Rgb::<f64>::new(0.0, 0.0, 0.0);
-
-                for _ in 0..self.samples_per_pixel {
-                    let ray = self.create_ray_around_pixel(i, j);
-                    color += self.calculate_color(&ray, world, 0);
-                }
-
-                color *= self.pixel_samples_scale;
-
-                row.push(color.linear_to_gamma().f64_to_u8());
+        let dimensions_clone = self.dimensions;
+        let progress_handler = thread::spawn(move || {
+            let mut counter = 0;
+            for _ in 0..dimensions_clone.all_elements() {
+                rx.recv().unwrap();
+                counter += 1;
+                info!(
+                    "{}/{} ({}%) rendered",
+                    counter,
+                    dimensions_clone.all_elements(),
+                    (counter as f64 * 100.0 / dimensions_clone.all_elements() as f64) as usize
+                )
             }
-            output.push(row);
-        }
+        });
+
+        let pixels: Vec<Vec<Rgb<u8>>> = (0..self.dimensions.height)
+            .into_par_iter()
+            .map(|j| {
+                (0..self.dimensions.width)
+                    .into_par_iter()
+                    .map(|i| {
+                        let color = (0..self.samples_per_pixel)
+                            .map(|_| {
+                                let ray = self.create_ray_around_pixel(i, j);
+                                self.calculate_color(&ray, world, 0)
+                            })
+                            .fold(Rgb::new(0.0, 0.0, 0.0), |acc, color| acc + color);
+                        tx.send(()).unwrap();
+                        (color * self.pixel_samples_scale)
+                            .linear_to_gamma()
+                            .f64_to_u8()
+                    })
+                    .collect()
+            })
+            .collect();
+
+        progress_handler.join().unwrap();
 
         info!("Finished rendering");
 
         RenderedImage {
-            pixels: output,
+            pixels,
             dimensions: self.dimensions,
         }
     }
@@ -156,7 +181,7 @@ impl Camera {
             self.defocus_disk_sample()
         };
 
-        let ray_direction = pixel - self.center;
+        let ray_direction = pixel - ray_origin;
 
         Ray::new(ray_origin, ray_direction)
     }
@@ -219,7 +244,6 @@ impl<
         let viewport_height = 2.0 * h * camera.focus_distance;
         // We don't use aspect ratio here as it might not be what real ratio between width and height is
         let viewport_width = viewport_height * camera.dimensions.ratio();
-        let center = Point3::new(0.0, 0.0, 0.0);
 
         // Calculate camera vectors
         camera.at = Unit::new_normalize(camera.center - camera.look_at);
@@ -235,7 +259,7 @@ impl<
         camera.pixel_delta_vertical = viewport_vertical / camera.dimensions.height as f64;
 
         // Upper left pixel
-        let viewport_upper_left = center
+        let viewport_upper_left = camera.center
             - camera.focus_distance * camera.at.into_inner()
             - viewport_horizontal / 2.0
             - viewport_vertical / 2.0;
