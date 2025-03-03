@@ -1,6 +1,9 @@
-use std::{sync::mpsc::channel, thread};
+use std::{
+    sync::mpsc::{channel, Receiver},
+    thread::{self, JoinHandle},
+};
 
-use log::info;
+use indicatif::{ProgressBar, ProgressStyle};
 use nalgebra::{Point3, Unit, UnitVector3, Vector2, Vector3};
 use rand::Rng;
 use rayon::prelude::*;
@@ -68,23 +71,7 @@ impl Camera {
     pub fn render(&self, scene: &Scene) -> RenderedImage {
         let (tx, rx) = channel::<()>();
 
-        info!("Starting rendering");
-
-        let dimensions_clone = self.dimensions;
-        let progress_handler = thread::spawn(move || {
-            let mut counter = 0;
-            let mut perc = 0;
-            for _ in 0..dimensions_clone.all_elements() {
-                rx.recv().unwrap();
-                counter += 1;
-                let new_perc =
-                    (counter as f64 * 100.0 / dimensions_clone.all_elements() as f64) as usize;
-                if new_perc > perc {
-                    perc = new_perc;
-                    info!("{}% rendered", perc)
-                }
-            }
-        });
+        let progress_handler = self.spawn_progress_thread(rx);
 
         let pixels: Vec<Rgb<u8>> = (0..self.dimensions.height)
             .into_par_iter()
@@ -108,8 +95,6 @@ impl Camera {
             .collect();
 
         progress_handler.join().unwrap();
-
-        info!("Finished rendering");
 
         RenderedImage::new(pixels, self.dimensions).unwrap()
     }
@@ -202,6 +187,26 @@ impl Camera {
         self.center
             + p.x * self.defocus_disk.horizontal_radius
             + p.y * self.defocus_disk.vertical_radius
+    }
+
+    fn spawn_progress_thread(&self, rx: Receiver<()>) -> JoinHandle<()> {
+        let all_elements = self.dimensions.all_elements();
+        let pb = ProgressBar::new(all_elements as _);
+        pb.set_style(
+            ProgressStyle::with_template("[{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}")
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+
+        thread::spawn(move || {
+            let mut counter = 0;
+            for _ in 0..all_elements {
+                rx.recv().unwrap();
+                counter += 1;
+                pb.set_position(counter);
+            }
+            pb.finish_with_message("rendered");
+        })
     }
 }
 
