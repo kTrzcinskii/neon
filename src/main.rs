@@ -1,10 +1,9 @@
-use std::{env, fs, io::Write};
+use std::env;
 
 use anyhow::{bail, Result};
 use nalgebra::Point3;
 use neon::{
     camera::Camera,
-    encoder::{ppm_encoder::PpmEncoder, rendered_image_encoder::RenderedImageEncoder},
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     object::{hittable_objects_list::HittableObjectsList, sphere::Sphere, HittableObjectType},
     random_vector_generator,
@@ -63,6 +62,12 @@ fn generate_random_spheres(
     }
     output
 }
+
+// TODO: before starting new book:
+// - create scene module and scene generator instead of hard coding it in main
+
+// TODO: after second book:
+// - add loading/saving scenes to files
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -135,12 +140,9 @@ fn main() -> Result<()> {
     let rendered = camera.render(&world);
 
     // Encode
-    let ppm_encoder = PpmEncoder::new(u8::MAX);
-    let rendered_econded = ppm_encoder.encode(&rendered);
-
-    // Save result
-    let mut file = fs::File::create(output_path)?;
-    file.write_all(&rendered_econded)?;
+    if let Err(e) = rendered.save(output_path) {
+        eprintln!("There was an error while saving output file: {}", e);
+    }
 
     Ok(())
 }

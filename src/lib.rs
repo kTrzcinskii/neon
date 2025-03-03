@@ -1,5 +1,4 @@
 pub mod camera;
-pub mod encoder;
 pub mod extensions;
 pub mod material;
 pub mod object;

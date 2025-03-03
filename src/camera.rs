@@ -75,21 +75,22 @@ impl Camera {
         let dimensions_clone = self.dimensions;
         let progress_handler = thread::spawn(move || {
             let mut counter = 0;
+            let mut perc = 0;
             for _ in 0..dimensions_clone.all_elements() {
                 rx.recv().unwrap();
                 counter += 1;
-                info!(
-                    "{}/{} ({}%) rendered",
-                    counter,
-                    dimensions_clone.all_elements(),
-                    (counter as f64 * 100.0 / dimensions_clone.all_elements() as f64) as usize
-                )
+                let new_perc =
+                    (counter as f64 * 100.0 / dimensions_clone.all_elements() as f64) as usize;
+                if new_perc > perc {
+                    perc = new_perc;
+                    info!("{}% rendered", perc)
+                }
             }
         });
 
-        let pixels: Vec<Vec<Rgb<u8>>> = (0..self.dimensions.height)
+        let pixels: Vec<Rgb<u8>> = (0..self.dimensions.height)
             .into_par_iter()
-            .map(|j| {
+            .flat_map(|j| {
                 (0..self.dimensions.width)
                     .into_par_iter()
                     .map(|i| {
@@ -104,7 +105,7 @@ impl Camera {
                             .linear_to_gamma()
                             .f64_to_u8()
                     })
-                    .collect()
+                    .collect::<Vec<Rgb<u8>>>()
             })
             .collect();
 
@@ -112,10 +113,7 @@ impl Camera {
 
         info!("Finished rendering");
 
-        RenderedImage {
-            pixels,
-            dimensions: self.dimensions,
-        }
+        RenderedImage::new(pixels, self.dimensions).unwrap()
     }
 
     fn calculate_color(&self, ray: &Ray, object: &impl HittableObject, depth: u32) -> Rgb<f64> {
