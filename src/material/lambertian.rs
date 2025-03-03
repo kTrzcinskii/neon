@@ -2,7 +2,7 @@ use rgb::Rgb;
 
 use crate::{
     object::hittable_object::HitRecord,
-    ray::{ray_generator::RayGenerator, Ray},
+    ray::{ray_generator, Ray},
 };
 
 use super::{Material, MaterialScattering};
@@ -19,7 +19,7 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, _: &Ray, hit_record: &HitRecord) -> Option<MaterialScattering> {
-        let scattered_ray = RayGenerator::random_ray_on_hemisphere(hit_record);
+        let scattered_ray = ray_generator::random_ray_on_hemisphere(hit_record);
         let material_scattering = MaterialScattering::new(self.albedo, scattered_ray);
         Some(material_scattering)
     }

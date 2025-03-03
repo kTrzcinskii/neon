@@ -2,7 +2,7 @@ use rgb::Rgb;
 
 use crate::{
     object::hittable_object::HitRecord,
-    ray::{ray_generator::RayGenerator, Ray},
+    ray::{ray_generator, Ray},
 };
 
 use super::{Material, MaterialScattering};
@@ -24,8 +24,8 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<MaterialScattering> {
-        let reflected_ray = RayGenerator::reflected_ray(ray, hit_record);
-        let scattered_ray = RayGenerator::fuzzed_ray(&reflected_ray, self.fuzziness);
+        let reflected_ray = ray_generator::reflected_ray(ray, hit_record);
+        let scattered_ray = ray_generator::fuzzed_ray(&reflected_ray, self.fuzziness);
         let material_scattering = MaterialScattering::new(self.albedo, scattered_ray);
         // In case when fuzzed ray gets below surface we just don't return it
         // (so surface absorbs it).

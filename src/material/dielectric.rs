@@ -2,7 +2,7 @@ use rgb::Rgb;
 
 use crate::{
     object::hittable_object::HitRecord,
-    ray::{ray_generator::RayGenerator, Ray},
+    ray::{ray_generator, Ray},
 };
 
 use super::{Material, MaterialScattering};
@@ -26,11 +26,11 @@ impl Material for Dielectric {
         // We try to refract the ray, if we cant it means that there is no solution (theta > 90)
         // and we should reflect it.
         let scattered_ray = if let Some(refracted_ray) =
-            RayGenerator::refracted_ray(ray, hit_record, self.refraction_index)
+            ray_generator::refracted_ray(ray, hit_record, self.refraction_index)
         {
             refracted_ray
         } else {
-            RayGenerator::reflected_ray(ray, hit_record)
+            ray_generator::reflected_ray(ray, hit_record)
         };
         let material_scattering = MaterialScattering::new(attenuation, scattered_ray);
         Some(material_scattering)
