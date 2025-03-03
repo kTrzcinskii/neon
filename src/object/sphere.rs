@@ -2,25 +2,23 @@ use std::ops::RangeInclusive;
 
 use nalgebra::{Point3, Unit, UnitVector3};
 
-use crate::{
-    extensions::ri_surrounds::RangeInclusiveSurroundsExtension, material::MaterialType, ray::Ray,
-};
+use crate::{extensions::ri_surrounds::RangeInclusiveSurroundsExtension, ray::Ray};
 
 use super::hittable_object::{HitRecord, HittableObject};
 
-pub struct Sphere<'a> {
+pub struct Sphere {
     center: Point3<f64>,
     radius: f64,
-    material: &'a MaterialType,
+    material_id: usize,
 }
 
-impl<'a> Sphere<'a> {
-    pub fn new(center: Point3<f64>, radius: f64, material: &'a MaterialType) -> Self {
+impl Sphere {
+    pub fn new(center: Point3<f64>, radius: f64, material_id: usize) -> Self {
         assert!(radius > 0.0);
         Sphere {
             center,
             radius,
-            material,
+            material_id,
         }
     }
 
@@ -33,7 +31,7 @@ impl<'a> Sphere<'a> {
     }
 }
 
-impl HittableObject for Sphere<'_> {
+impl HittableObject for Sphere {
     fn hit(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord> {
         let oc = self.center() - ray.origin();
         let a = ray.direction().norm_squared();
@@ -60,7 +58,8 @@ impl HittableObject for Sphere<'_> {
         // We know its normalize so we skip checking part to gain some performance boost
         let unit_outward_normal: UnitVector3<f64> = Unit::new_unchecked(outward_normal);
 
-        let hit_record = HitRecord::new(hit_point, root, unit_outward_normal, ray, self.material);
+        let hit_record =
+            HitRecord::new(hit_point, root, unit_outward_normal, ray, self.material_id);
         Some(hit_record)
     }
 }

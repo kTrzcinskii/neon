@@ -7,6 +7,7 @@ use neon::{
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     object::{hittable_objects_list::HittableObjectsList, sphere::Sphere, HittableObjectType},
     random_vector_generator,
+    scene::Scene,
 };
 use rand::Rng;
 use rgb::Rgb;
@@ -39,12 +40,8 @@ fn generate_random_materials(rows: usize, cols: usize) -> Vec<MaterialType> {
         .collect()
 }
 
-fn generate_random_spheres(
-    rows: usize,
-    cols: usize,
-    materials: &[MaterialType],
-) -> Vec<HittableObjectType<'_>> {
-    let mut output = Vec::with_capacity(materials.len());
+fn generate_random_spheres(rows: usize, cols: usize) -> Vec<HittableObjectType> {
+    let mut output = Vec::with_capacity(rows * cols);
     let half_rows = (rows as f64 / 2.0) as i32;
     let half_cols = (cols as f64 / 2.0) as i32;
     for i in -half_rows..half_rows {
@@ -56,7 +53,7 @@ fn generate_random_spheres(
                 j as f64 + 0.9 * rng.random::<f64>(),
             );
             let id = (i + half_rows) as usize * rows + (j + half_rows) as usize;
-            let obj = HittableObjectType::Sphere(Sphere::new(center, 0.2, &materials[id]));
+            let obj = HittableObjectType::Sphere(Sphere::new(center, 0.2, id));
             output.push(obj);
         }
     }
@@ -84,37 +81,46 @@ fn main() -> Result<()> {
 
     // Materials
     let material_ground = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.5, 0.5, 0.5)));
-    let random_materials = generate_random_materials(ROWS, COLS);
+    let mut random_materials = generate_random_materials(ROWS, COLS);
+    random_materials.push(material_ground);
 
     // World
-    let spheres = generate_random_spheres(ROWS, COLS, &random_materials);
+    let spheres = generate_random_spheres(ROWS, COLS);
     let mut world = HittableObjectsList::from(spheres);
     world.add(HittableObjectType::Sphere(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
-        &material_ground,
+        random_materials.len() - 1,
     )));
 
     let glass = MaterialType::Dielectric(Dielectric::new(1.5));
+    random_materials.push(glass);
     world.add(HittableObjectType::Sphere(Sphere::new(
         Point3::new(0.0, 1.0, 0.0),
         1.0,
-        &glass,
+        random_materials.len() - 1,
     )));
 
     let lambertian = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.4, 0.2, 0.1)));
+    random_materials.push(lambertian);
     world.add(HittableObjectType::Sphere(Sphere::new(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
-        &lambertian,
+        random_materials.len() - 1,
     )));
 
     let metal = MaterialType::Metal(Metal::new(Rgb::new(0.7, 0.6, 0.5), 0.0));
+    random_materials.push(metal);
     world.add(HittableObjectType::Sphere(Sphere::new(
         Point3::new(4.0, 1.0, 0.0),
         1.0,
-        &metal,
+        random_materials.len() - 1,
     )));
+
+    let scene = Scene::new(
+        random_materials,
+        HittableObjectType::HittableObjectList(world),
+    );
 
     // Camera
     const WIDTH: u32 = 1200;
@@ -137,7 +143,7 @@ fn main() -> Result<()> {
         .defocus_angle(DEFOCUS_ANGLE)
         .focus_distance(FOCUS_DISTANCE)
         .build();
-    let rendered = camera.render(&world);
+    let rendered = camera.render(&scene);
 
     // Encode
     if let Err(e) = rendered.save(output_path) {

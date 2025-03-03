@@ -16,6 +16,7 @@ use crate::{
     random_vector_generator,
     ray::Ray,
     rendered_image::{Dimensions, RenderedImage},
+    scene::Scene,
 };
 
 #[derive(TypedBuilder)]
@@ -64,10 +65,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn render<HO>(&self, world: &HO) -> RenderedImage
-    where
-        HO: HittableObject + Sync,
-    {
+    pub fn render(&self, scene: &Scene) -> RenderedImage {
         let (tx, rx) = channel::<()>();
 
         info!("Starting rendering");
@@ -97,7 +95,7 @@ impl Camera {
                         let color = (0..self.samples_per_pixel)
                             .map(|_| {
                                 let ray = self.create_ray_around_pixel(i, j);
-                                self.calculate_color(&ray, world, 0)
+                                self.calculate_color(&ray, scene, scene.world(), 0)
                             })
                             .fold(Rgb::new(0.0, 0.0, 0.0), |acc, color| acc + color);
                         tx.send(()).unwrap();
@@ -116,7 +114,13 @@ impl Camera {
         RenderedImage::new(pixels, self.dimensions).unwrap()
     }
 
-    fn calculate_color(&self, ray: &Ray, object: &impl HittableObject, depth: u32) -> Rgb<f64> {
+    fn calculate_color(
+        &self,
+        ray: &Ray,
+        scene: &Scene,
+        object: &impl HittableObject,
+        depth: u32,
+    ) -> Rgb<f64> {
         if depth >= self.max_bounce_depth {
             return Rgb {
                 r: 0.0,
@@ -129,10 +133,12 @@ impl Camera {
         // ray would reflect in such a way that it would hit the same sphere once again.
         let hit_record = object.hit(ray, 0.001..=f64::MAX);
         if let Some(hit_record) = hit_record {
-            match hit_record.material_type().scatter(ray, &hit_record) {
+            let material = scene.material_by_id(hit_record.material_id()).unwrap();
+            match material.scatter(ray, &hit_record) {
                 Some(material_scattering) => {
                     let next_color = self.calculate_color(
                         material_scattering.scattered_ray(),
+                        scene,
                         object,
                         depth + 1,
                     );

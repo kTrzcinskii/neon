@@ -5,21 +5,21 @@ use super::{
     HittableObjectType,
 };
 
-pub struct HittableObjectsList<'a> {
-    items: Vec<HittableObjectType<'a>>,
+pub struct HittableObjectsList {
+    items: Vec<HittableObjectType>,
 }
 
-impl<'a> HittableObjectsList<'a> {
+impl HittableObjectsList {
     pub fn new() -> Self {
         HittableObjectsList { items: vec![] }
     }
 
-    pub fn add(&mut self, item: HittableObjectType<'a>) {
+    pub fn add(&mut self, item: HittableObjectType) {
         self.items.push(item);
     }
 }
 
-impl HittableObject for HittableObjectsList<'_> {
+impl HittableObject for HittableObjectsList {
     fn hit(&self, ray: &crate::ray::Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord> {
         let mut closest_hit: Option<HitRecord> = None;
         let mut closest_t = *t_range.end();
@@ -36,13 +36,13 @@ impl HittableObject for HittableObjectsList<'_> {
     }
 }
 
-impl<'a> From<Vec<HittableObjectType<'a>>> for HittableObjectsList<'a> {
-    fn from(value: Vec<HittableObjectType<'a>>) -> Self {
+impl From<Vec<HittableObjectType>> for HittableObjectsList {
+    fn from(value: Vec<HittableObjectType>) -> Self {
         HittableObjectsList { items: value }
     }
 }
 
-impl Default for HittableObjectsList<'_> {
+impl Default for HittableObjectsList {
     fn default() -> Self {
         Self::new()
     }
