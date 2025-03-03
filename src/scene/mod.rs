@@ -1,3 +1,5 @@
+pub mod scene_generator;
+
 use crate::{material::MaterialType, object::HittableObjectType};
 
 pub struct Scene {
