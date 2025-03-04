@@ -22,6 +22,15 @@ impl AxisAlignedBoundingBox {
         }
     }
 
+    pub fn empty() -> Self {
+        let empty_interval = 0.0..=0.0;
+        AxisAlignedBoundingBox {
+            interval_x: empty_interval.clone(),
+            interval_y: empty_interval.clone(),
+            interval_z: empty_interval,
+        }
+    }
+
     fn find_interval(u: f64, v: f64) -> RangeInclusive<f64> {
         let start = u.min(v);
         let end = u.max(v);
