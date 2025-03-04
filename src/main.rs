@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     const ROWS: usize = 24;
     const COLS: usize = 24;
 
-    let scene = scene_generator::scene_with_spheres(ROWS, COLS);
+    let scene = scene_generator::scene_with_moving_spheres(ROWS, COLS);
 
     // Camera
     const WIDTH: u32 = 1200;
