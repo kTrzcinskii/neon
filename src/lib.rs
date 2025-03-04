@@ -1,3 +1,4 @@
+pub mod aabb;
 pub mod camera;
 pub mod extensions;
 pub mod material;
