@@ -156,7 +156,7 @@ impl Camera {
     }
 
     /// Create ray originating in a defocus disk and directed and random pixel around
-    /// viewport pixel (i, j)
+    /// viewport pixel (i, j), with random time in range [0, 1.0]
     fn create_ray_around_pixel(&self, pixel_x: u32, pixel_y: u32) -> Ray {
         let offset = Self::sample_square();
 
@@ -172,7 +172,10 @@ impl Camera {
 
         let ray_direction = pixel - ray_origin;
 
-        Ray::new(ray_origin, ray_direction)
+        let mut rng = rand::rng();
+        let ray_time = rng.random();
+
+        Ray::new(ray_origin, ray_direction, ray_time)
     }
 
     fn sample_square() -> Vector2<f64> {

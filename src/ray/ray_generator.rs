@@ -12,7 +12,7 @@ use super::Ray;
 
 /// Returns a random `Ray` that is on the same hemisphere as
 /// the normal of the `hit_record`.
-pub fn random_ray_on_hemisphere(hit_record: &HitRecord) -> Ray {
+pub fn random_ray_on_hemisphere(ray: &Ray, hit_record: &HitRecord) -> Ray {
     let mut direction = random_vector_generator::random_unit_vector3_in_sphere();
     if direction.dot(hit_record.normal()) < 0.0 {
         direction = -direction;
@@ -22,12 +22,12 @@ pub fn random_ray_on_hemisphere(hit_record: &HitRecord) -> Ray {
     if direction.iter().all(|x| x.abs() < 1e-8) {
         direction = hit_record.normal().into_inner();
     }
-    Ray::new(*hit_record.pos(), direction)
+    Ray::new(*hit_record.pos(), direction, ray.time())
 }
 
 pub fn reflected_ray(ray: &Ray, hit_record: &HitRecord) -> Ray {
     let reflected_direction = ray.direction().reflect(hit_record.normal());
-    Ray::new(*hit_record.pos(), reflected_direction)
+    Ray::new(*hit_record.pos(), reflected_direction, ray.time())
 }
 
 pub fn fuzzed_ray(ray: &Ray, fuzziness: f64) -> Ray {
@@ -36,7 +36,7 @@ pub fn fuzzed_ray(ray: &Ray, fuzziness: f64) -> Ray {
     }
     let fuzzed_direction = ray.direction().normalize()
         + fuzziness * random_vector_generator::random_unit_vector3_in_sphere();
-    Ray::new(*ray.origin(), fuzzed_direction)
+    Ray::new(*ray.origin(), fuzzed_direction, ray.time())
 }
 
 pub fn refracted_ray(
@@ -62,7 +62,7 @@ pub fn refracted_ray(
     let refracted_direction = ray
         .direction()
         .refract(hit_record.normal(), refraction_index);
-    Some(Ray::new(*hit_record.pos(), refracted_direction))
+    Some(Ray::new(*hit_record.pos(), refracted_direction, ray.time()))
 }
 
 /// Uses schlick approximation to calculate reflectance, which is probabilty that the light would reflect.
