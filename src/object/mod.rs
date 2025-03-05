@@ -12,6 +12,7 @@ pub mod hittable_objects_list;
 pub mod moving_sphere;
 pub mod sphere;
 
+#[derive(Clone)]
 pub enum HittableObjectType {
     Sphere(Sphere),
     MovingSphere(MovingSphere),

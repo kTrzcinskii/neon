@@ -7,6 +7,7 @@ use super::{
     HittableObjectType,
 };
 
+#[derive(Clone)]
 pub struct HittableObjectsList {
     items: Vec<HittableObjectType>,
     bounding_box: AxisAlignedBoundingBox,

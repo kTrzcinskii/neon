@@ -8,6 +8,7 @@ use super::hittable_object::{HitRecord, HittableObject};
 
 /// `MovingSphere` is like `Sphere` struct, with the additional ability to change sphere position
 /// over time. It starts in position `from` and ends in position `to`, lineary moving from one to the another.
+#[derive(Clone)]
 pub struct MovingSphere {
     from: Point3<f64>,
     direction: Vector3<f64>,

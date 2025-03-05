@@ -9,6 +9,7 @@ use crate::{
 
 use super::hittable_object::{HitRecord, HittableObject};
 
+#[derive(Clone)]
 pub struct Sphere {
     center: Point3<f64>,
     radius: f64,

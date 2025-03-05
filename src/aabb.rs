@@ -4,6 +4,7 @@ use nalgebra::Point3;
 
 use crate::ray::Ray;
 
+#[derive(Clone)]
 pub struct AxisAlignedBoundingBox {
     interval_x: RangeInclusive<f64>,
     interval_y: RangeInclusive<f64>,
