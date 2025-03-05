@@ -1,5 +1,7 @@
 use std::ops::RangeInclusive;
 
+use crate::aabb::AxisAlignedBoundingBox;
+
 use super::{
     hittable_object::{HitRecord, HittableObject},
     HittableObjectType,
@@ -7,14 +9,19 @@ use super::{
 
 pub struct HittableObjectsList {
     items: Vec<HittableObjectType>,
+    bounding_box: AxisAlignedBoundingBox,
 }
 
 impl HittableObjectsList {
     pub fn new() -> Self {
-        HittableObjectsList { items: vec![] }
+        HittableObjectsList {
+            items: vec![],
+            bounding_box: AxisAlignedBoundingBox::empty(),
+        }
     }
 
     pub fn add(&mut self, item: HittableObjectType) {
+        self.bounding_box = AxisAlignedBoundingBox::merge(&self.bounding_box, item.bounding_box());
         self.items.push(item);
     }
 }
@@ -34,11 +41,23 @@ impl HittableObject for HittableObjectsList {
 
         closest_hit
     }
+
+    fn bounding_box(&self) -> &AxisAlignedBoundingBox {
+        &self.bounding_box
+    }
 }
 
 impl From<Vec<HittableObjectType>> for HittableObjectsList {
     fn from(value: Vec<HittableObjectType>) -> Self {
-        HittableObjectsList { items: value }
+        let bounding_box = value
+            .iter()
+            .fold(AxisAlignedBoundingBox::empty(), |acc, ho| {
+                AxisAlignedBoundingBox::merge(&acc, ho.bounding_box())
+            });
+        HittableObjectsList {
+            items: value,
+            bounding_box,
+        }
     }
 }
 

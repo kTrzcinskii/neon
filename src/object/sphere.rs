@@ -1,8 +1,11 @@
 use std::ops::RangeInclusive;
 
-use nalgebra::{Point3, Unit, UnitVector3};
+use nalgebra::{Point3, Unit, UnitVector3, Vector3};
 
-use crate::{extensions::ri_surrounds::RangeInclusiveSurroundsExtension, ray::Ray};
+use crate::{
+    aabb::AxisAlignedBoundingBox, extensions::ri_surrounds::RangeInclusiveSurroundsExtension,
+    ray::Ray,
+};
 
 use super::hittable_object::{HitRecord, HittableObject};
 
@@ -10,15 +13,19 @@ pub struct Sphere {
     center: Point3<f64>,
     radius: f64,
     material_id: usize,
+    bounding_box: AxisAlignedBoundingBox,
 }
 
 impl Sphere {
     pub fn new(center: Point3<f64>, radius: f64, material_id: usize) -> Self {
         assert!(radius > 0.0);
+        let radius_vec = Vector3::new(radius, radius, radius);
+        let bounding_box = AxisAlignedBoundingBox::new(center - radius_vec, center + radius_vec);
         Sphere {
             center,
             radius,
             material_id,
+            bounding_box,
         }
     }
 
@@ -61,5 +68,9 @@ impl HittableObject for Sphere {
         let hit_record =
             HitRecord::new(hit_point, root, unit_outward_normal, ray, self.material_id);
         Some(hit_record)
+    }
+
+    fn bounding_box(&self) -> &AxisAlignedBoundingBox {
+        &self.bounding_box
     }
 }
