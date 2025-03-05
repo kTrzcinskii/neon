@@ -116,7 +116,8 @@ impl Camera {
 
         // We start our range at 0.001 to fix the potential rounding issue, where
         // ray would reflect in such a way that it would hit the same sphere once again.
-        let hit_record = object.hit(ray, 0.001..=f64::MAX);
+        let full_range = 0.001..=f64::MAX;
+        let hit_record = object.hit(ray, &full_range);
         if let Some(hit_record) = hit_record {
             let material = scene.material_by_id(hit_record.material_id()).unwrap();
             match material.scatter(ray, &hit_record) {

@@ -27,12 +27,13 @@ impl HittableObjectsList {
 }
 
 impl HittableObject for HittableObjectsList {
-    fn hit(&self, ray: &crate::ray::Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord> {
+    fn hit(&self, ray: &crate::ray::Ray, t_range: &RangeInclusive<f64>) -> Option<HitRecord> {
         let mut closest_hit: Option<HitRecord> = None;
         let mut closest_t = *t_range.end();
 
         for item in &self.items {
-            let obj_hit = item.hit(ray, *t_range.start()..=closest_t);
+            let range = *t_range.start()..=closest_t;
+            let obj_hit = item.hit(ray, &range);
             if let Some(hit_record) = obj_hit {
                 closest_t = hit_record.t();
                 closest_hit = Some(hit_record);

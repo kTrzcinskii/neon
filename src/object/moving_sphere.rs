@@ -39,7 +39,7 @@ impl MovingSphere {
 }
 
 impl HittableObject for MovingSphere {
-    fn hit(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_range: &RangeInclusive<f64>) -> Option<HitRecord> {
         let sphere_at_time = Sphere::new(self.center_at(ray.time()), self.radius, self.material_id);
         sphere_at_time.hit(ray, t_range)
     }

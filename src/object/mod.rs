@@ -19,7 +19,7 @@ pub enum HittableObjectType {
 }
 
 impl HittableObject for HittableObjectType {
-    fn hit(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> Option<hittable_object::HitRecord> {
+    fn hit(&self, ray: &Ray, t_range: &RangeInclusive<f64>) -> Option<hittable_object::HitRecord> {
         match self {
             HittableObjectType::Sphere(sphere) => sphere.hit(ray, t_range),
             HittableObjectType::MovingSphere(moving_sphere) => moving_sphere.hit(ray, t_range),

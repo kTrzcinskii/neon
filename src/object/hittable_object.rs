@@ -5,7 +5,7 @@ use nalgebra::{Point3, UnitVector3};
 use crate::{aabb::AxisAlignedBoundingBox, ray::Ray};
 
 pub trait HittableObject {
-    fn hit(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, t_range: &RangeInclusive<f64>) -> Option<HitRecord>;
     fn bounding_box(&self) -> &AxisAlignedBoundingBox;
 }
 

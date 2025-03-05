@@ -50,23 +50,20 @@ impl AxisAlignedBoundingBox {
         start..=end
     }
 
-    pub fn intersects_ray(&self, ray: &Ray, t_range: RangeInclusive<f64>) -> bool {
-        self.intersects_ray_in_axis(
-            ray.direction().x,
-            ray.origin().x,
-            &t_range,
-            &self.interval_x,
-        ) || self.intersects_ray_in_axis(
-            ray.direction().y,
-            ray.origin().y,
-            &t_range,
-            &self.interval_y,
-        ) || self.intersects_ray_in_axis(
-            ray.direction().z,
-            ray.origin().z,
-            &t_range,
-            &self.interval_z,
-        )
+    pub fn intersects_ray(&self, ray: &Ray, t_range: &RangeInclusive<f64>) -> bool {
+        self.intersects_ray_in_axis(ray.direction().x, ray.origin().x, t_range, &self.interval_x)
+            || self.intersects_ray_in_axis(
+                ray.direction().y,
+                ray.origin().y,
+                t_range,
+                &self.interval_y,
+            )
+            || self.intersects_ray_in_axis(
+                ray.direction().z,
+                ray.origin().z,
+                t_range,
+                &self.interval_z,
+            )
     }
 
     fn intersects_ray_in_axis(
