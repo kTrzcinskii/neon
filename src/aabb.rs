@@ -22,6 +22,19 @@ impl AxisAlignedBoundingBox {
         }
     }
 
+    /// Merges two `AxisAlignedBoundingBox`s into one containing them both.
+    /// Created `AxisAlignedBoundingBox` is as small as possible.
+    pub fn merge(b1: &AxisAlignedBoundingBox, b2: &AxisAlignedBoundingBox) -> Self {
+        let interval_x = Self::merge_ranges(&b1.interval_x, &b2.interval_x);
+        let interval_y = Self::merge_ranges(&b1.interval_y, &b2.interval_y);
+        let interval_z = Self::merge_ranges(&b1.interval_z, &b2.interval_z);
+        Self {
+            interval_x,
+            interval_y,
+            interval_z,
+        }
+    }
+
     pub fn empty() -> Self {
         let empty_interval = 0.0..=0.0;
         AxisAlignedBoundingBox {
@@ -73,5 +86,12 @@ impl AxisAlignedBoundingBox {
         };
 
         t_min < t_max
+    }
+
+    /// Creates the smalles range that contains both ranges
+    fn merge_ranges(r1: &RangeInclusive<f64>, r2: &RangeInclusive<f64>) -> RangeInclusive<f64> {
+        let start = r1.start().min(*r2.start());
+        let end = r1.end().max(*r2.end());
+        start..=end
     }
 }
