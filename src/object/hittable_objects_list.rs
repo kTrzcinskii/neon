@@ -7,6 +7,7 @@ use super::{
     HittableObjectType,
 };
 
+// TODO: after introducing BvhTree it seems like this struct should be removed
 #[derive(Clone)]
 pub struct HittableObjectsList {
     items: Vec<HittableObjectType>,
@@ -24,6 +25,10 @@ impl HittableObjectsList {
     pub fn add(&mut self, item: HittableObjectType) {
         self.bounding_box = AxisAlignedBoundingBox::merge(&self.bounding_box, item.bounding_box());
         self.items.push(item);
+    }
+
+    pub fn items(&self) -> &[HittableObjectType] {
+        &self.items
     }
 }
 
