@@ -10,6 +10,9 @@ use crate::{
         HittableObjectType,
     },
     random_vector_generator,
+    texture::{
+        checker_texture::CheckerTexture, solid_color::SolidColor, NonRecursiveTexture, TextureType,
+    },
 };
 
 use super::Scene;
@@ -17,11 +20,11 @@ use super::Scene;
 pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
     // Materials
     let mut materials = generate_random_materials(rows, cols);
-    let material_ground = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.5, 0.5, 0.5)));
+    let material_ground = MaterialType::Lambertian(Lambertian::from(Rgb::new(0.5, 0.5, 0.5)));
     materials.push(material_ground);
     let glass = MaterialType::Dielectric(Dielectric::new(1.5));
     materials.push(glass);
-    let lambertian = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.4, 0.2, 0.1)));
+    let lambertian = MaterialType::Lambertian(Lambertian::from(Rgb::new(0.4, 0.2, 0.1)));
     materials.push(lambertian);
     let metal = MaterialType::Metal(Metal::new(Rgb::new(0.7, 0.6, 0.5), 0.0));
     materials.push(metal);
@@ -56,11 +59,15 @@ pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
 pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
     // Materials
     let mut materials = generate_random_materials(rows, cols);
-    let material_ground = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.5, 0.5, 0.5)));
+    let checker_even = NonRecursiveTexture::SolidColor(SolidColor::new(Rgb::new(0.2, 0.3, 0.1)));
+    let checker_odd = NonRecursiveTexture::SolidColor(SolidColor::new(Rgb::new(0.9, 0.9, 0.9)));
+    let checker = CheckerTexture::new(0.32, checker_even, checker_odd);
+    let material_ground =
+        MaterialType::Lambertian(Lambertian::new(TextureType::CheckerTexture(checker)));
     materials.push(material_ground);
     let glass = MaterialType::Dielectric(Dielectric::new(1.5));
     materials.push(glass);
-    let lambertian = MaterialType::Lambertian(Lambertian::new(Rgb::new(0.4, 0.2, 0.1)));
+    let lambertian = MaterialType::Lambertian(Lambertian::from(Rgb::new(0.4, 0.2, 0.1)));
     materials.push(lambertian);
     let metal = MaterialType::Metal(Metal::new(Rgb::new(0.7, 0.6, 0.5), 0.0));
     materials.push(metal);
@@ -105,7 +112,7 @@ fn generate_random_materials(rows: usize, cols: usize) -> Vec<MaterialType> {
                     .zip(color_vec.iter())
                     .map(|(x, y)| x * y)
                     .collect();
-                MaterialType::Lambertian(Lambertian::new(albedo))
+                MaterialType::Lambertian(Lambertian::from(albedo))
             } else if choose_material < 0.95 {
                 let albedo: Rgb<f64> = random_vector_generator::random_vector3(0.5..1.0)
                     .into_iter()

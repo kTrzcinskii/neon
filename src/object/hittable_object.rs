@@ -18,6 +18,10 @@ pub struct HitRecord {
     front_face: bool,
     /// Index in array of `MaterialType`s stored in `Scene`
     material_id: usize,
+    /// Horizontal texture coordinate of the hitten object
+    u: f64,
+    /// Vertical texture coordinate of the hitten object
+    v: f64,
 }
 
 impl HitRecord {
@@ -41,6 +45,9 @@ impl HitRecord {
             t,
             front_face,
             material_id,
+            // TODO: calculate it
+            u: 0.0,
+            v: 0.0,
         }
     }
 
@@ -62,5 +69,13 @@ impl HitRecord {
 
     pub fn material_id(&self) -> usize {
         self.material_id
+    }
+
+    pub fn u(&self) -> f64 {
+        self.u
+    }
+
+    pub fn v(&self) -> f64 {
+        self.v
     }
 }
