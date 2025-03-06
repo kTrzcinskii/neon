@@ -3,6 +3,7 @@ use rand::Rng;
 use rgb::Rgb;
 
 use crate::{
+    bvh::BvhTree,
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     object::{
         hittable_objects_list::HittableObjectsList, moving_sphere::MovingSphere, sphere::Sphere,
@@ -49,7 +50,7 @@ pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
         materials.len() - 1,
     )));
 
-    Scene::new(materials, HittableObjectType::HittableObjectList(world))
+    Scene::new(materials, BvhTree::from(world))
 }
 
 pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
@@ -88,7 +89,7 @@ pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
         materials.len() - 1,
     )));
 
-    Scene::new(materials, HittableObjectType::HittableObjectList(world))
+    Scene::new(materials, BvhTree::from(world))
 }
 
 fn generate_random_materials(rows: usize, cols: usize) -> Vec<MaterialType> {

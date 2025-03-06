@@ -82,7 +82,7 @@ impl Camera {
                         let color = (0..self.samples_per_pixel)
                             .map(|_| {
                                 let ray = self.create_ray_around_pixel(i, j);
-                                self.calculate_color(&ray, scene, scene.world(), 0)
+                                self.calculate_color(&ray, scene, scene.bvh(), 0)
                             })
                             .fold(Rgb::new(0.0, 0.0, 0.0), |acc, color| acc + color);
                         tx.send(()).unwrap();

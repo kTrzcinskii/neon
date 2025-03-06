@@ -1,19 +1,19 @@
 pub mod scene_generator;
 
-use crate::{material::MaterialType, object::HittableObjectType};
+use crate::{bvh::BvhTree, material::MaterialType};
 
 pub struct Scene {
     materials: Vec<MaterialType>,
-    world: HittableObjectType,
+    bvh: BvhTree,
 }
 
 impl Scene {
-    pub fn new(materials: Vec<MaterialType>, world: HittableObjectType) -> Self {
-        Scene { materials, world }
+    pub fn new(materials: Vec<MaterialType>, bvh: BvhTree) -> Self {
+        Scene { materials, bvh }
     }
 
-    pub fn world(&self) -> &HittableObjectType {
-        &self.world
+    pub fn bvh(&self) -> &BvhTree {
+        &self.bvh
     }
 
     pub fn material_by_id(&self, id: usize) -> Option<&MaterialType> {
