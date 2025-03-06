@@ -4,6 +4,7 @@ use rgb::Rgb;
 
 use crate::{
     bvh::BvhTree,
+    camera::Camera,
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     object::{
         hittable_objects_list::HittableObjectsList, moving_sphere::MovingSphere, sphere::Sphere,
@@ -15,7 +16,7 @@ use crate::{
     },
 };
 
-use super::Scene;
+use super::{Scene, SceneContent};
 
 pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
     // Materials
@@ -53,7 +54,9 @@ pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
         materials.len() - 1,
     )));
 
-    Scene::new(materials, BvhTree::from(world))
+    let content = SceneContent::new(materials, BvhTree::from(world));
+    let camera = build_camera_for_spheres();
+    Scene::new(content, camera)
 }
 
 pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
@@ -96,7 +99,46 @@ pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
         materials.len() - 1,
     )));
 
-    Scene::new(materials, BvhTree::from(world))
+    let content = SceneContent::new(materials, BvhTree::from(world));
+    let camera = build_camera_for_spheres();
+    Scene::new(content, camera)
+}
+
+pub fn scene_with_two_checker_spheres() -> Scene {
+    // Materials
+    let checker_even = NonRecursiveTexture::SolidColor(SolidColor::new(Rgb::new(0.2, 0.3, 0.1)));
+    let checker_odd = NonRecursiveTexture::SolidColor(SolidColor::new(Rgb::new(0.9, 0.9, 0.9)));
+    let checker = CheckerTexture::new(0.32, checker_even, checker_odd);
+    let material = MaterialType::Lambertian(Lambertian::new(TextureType::CheckerTexture(checker)));
+    let materials = vec![material];
+
+    // Objects
+    let world = vec![
+        HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, -10.0, 0.0), 10.0, 0)),
+        HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, 10.0, 0.0), 10.0, 0)),
+    ];
+
+    let content = SceneContent::new(materials, BvhTree::from(world));
+
+    // Camera
+    const WIDTH: u32 = 1200;
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    const SAMPLES_PER_PIXEL: u32 = 100;
+    const MAX_BOUNCE_DEPTH: u32 = 50;
+    const V_FOV: f64 = 20.0;
+    const CENTER: Point3<f64> = Point3::new(13.0, 2.0, 3.0);
+    const LOOK_AT: Point3<f64> = Point3::new(0.0, 0.0, 0.0);
+    let camera = Camera::builder()
+        .width(WIDTH)
+        .aspect_ratio(ASPECT_RATIO)
+        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .max_bounce_depth(MAX_BOUNCE_DEPTH)
+        .vertical_fov_angles(V_FOV)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .build();
+
+    Scene::new(content, camera)
 }
 
 fn generate_random_materials(rows: usize, cols: usize) -> Vec<MaterialType> {
@@ -166,4 +208,27 @@ fn generate_random_moving_spheres(rows: usize, cols: usize) -> Vec<HittableObjec
         }
     }
     output
+}
+
+fn build_camera_for_spheres() -> Camera {
+    const WIDTH: u32 = 1200;
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    const SAMPLES_PER_PIXEL: u32 = 500;
+    const MAX_BOUNCE_DEPTH: u32 = 50;
+    const V_FOV: f64 = 20.0;
+    const CENTER: Point3<f64> = Point3::new(13.0, 2.0, 3.0);
+    const LOOK_AT: Point3<f64> = Point3::new(0.0, 0.0, 0.0);
+    const DEFOCUS_ANGLE: f64 = 0.6;
+    const FOCUS_DISTANCE: f64 = 10.0;
+    Camera::builder()
+        .width(WIDTH)
+        .aspect_ratio(ASPECT_RATIO)
+        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .max_bounce_depth(MAX_BOUNCE_DEPTH)
+        .vertical_fov_angles(V_FOV)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .defocus_angle(DEFOCUS_ANGLE)
+        .focus_distance(FOCUS_DISTANCE)
+        .build()
 }

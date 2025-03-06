@@ -1,15 +1,30 @@
 pub mod scene_generator;
 
-use crate::{bvh::BvhTree, material::MaterialType};
+use crate::{bvh::BvhTree, camera::Camera, material::MaterialType, rendered_image::RenderedImage};
 
 pub struct Scene {
+    content: SceneContent,
+    camera: Camera,
+}
+
+impl Scene {
+    pub fn new(content: SceneContent, camera: Camera) -> Self {
+        Self { content, camera }
+    }
+
+    pub fn render(&self) -> RenderedImage {
+        self.camera.render(&self.content)
+    }
+}
+
+pub struct SceneContent {
     materials: Vec<MaterialType>,
     bvh: BvhTree,
 }
 
-impl Scene {
+impl SceneContent {
     pub fn new(materials: Vec<MaterialType>, bvh: BvhTree) -> Self {
-        Scene { materials, bvh }
+        SceneContent { materials, bvh }
     }
 
     pub fn bvh(&self) -> &BvhTree {
