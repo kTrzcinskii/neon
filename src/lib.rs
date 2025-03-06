@@ -8,3 +8,4 @@ pub mod random_vector_generator;
 pub mod ray;
 pub mod rendered_image;
 pub mod scene;
+pub mod texture;
