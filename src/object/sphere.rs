@@ -1,4 +1,4 @@
-use std::ops::RangeInclusive;
+use std::{f64, ops::RangeInclusive};
 
 use nalgebra::{Point3, Unit, UnitVector3, Vector3};
 
@@ -37,6 +37,18 @@ impl Sphere {
     pub fn radius(&self) -> f64 {
         self.radius
     }
+
+    /// It returns pair `(u, v)`, where
+    /// `u` is value `[0, 1]` of angle around the Y axis from X=-1,
+    /// `v` is value `[0, 1]` of angle from Y=-1 to Y=1.
+    /// `pos` should be a vector from center to surface of the sphere of radius one.
+    fn uv_coords(pos: &UnitVector3<f64>) -> (f64, f64) {
+        let theta = (-pos.y).acos();
+        let phi = (-pos.z).atan2(pos.x) + f64::consts::PI;
+        let u = phi / (2.0 * f64::consts::PI);
+        let v = theta / f64::consts::PI;
+        (u, v)
+    }
 }
 
 impl HittableObject for Sphere {
@@ -66,8 +78,17 @@ impl HittableObject for Sphere {
         // We know its normalize so we skip checking part to gain some performance boost
         let unit_outward_normal: UnitVector3<f64> = Unit::new_unchecked(outward_normal);
 
-        let hit_record =
-            HitRecord::new(hit_point, root, unit_outward_normal, ray, self.material_id);
+        let (u, v) = Self::uv_coords(&unit_outward_normal);
+
+        let hit_record = HitRecord::new(
+            hit_point,
+            root,
+            unit_outward_normal,
+            ray,
+            self.material_id,
+            u,
+            v,
+        );
         Some(hit_record)
     }
 

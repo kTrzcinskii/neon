@@ -32,6 +32,8 @@ impl HitRecord {
         outward_normal: UnitVector3<f64>,
         ray: &Ray,
         material_id: usize,
+        u: f64,
+        v: f64,
     ) -> Self {
         let front_face = ray.direction().dot(&outward_normal) < 0.0;
         let normal = if front_face {
@@ -45,9 +47,8 @@ impl HitRecord {
             t,
             front_face,
             material_id,
-            // TODO: calculate it
-            u: 0.0,
-            v: 0.0,
+            u,
+            v,
         }
     }
 
