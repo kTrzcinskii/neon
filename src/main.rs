@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     // const ROWS: usize = 24;
     // const COLS: usize = 24;
 
-    let scene = scene_generator::scene_with_two_checker_spheres();
+    let scene = scene_generator::scene_with_earthmap();
 
     // Render
     info!("Starting rendering");

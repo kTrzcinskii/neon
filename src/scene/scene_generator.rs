@@ -12,7 +12,8 @@ use crate::{
     },
     random_vector_generator,
     texture::{
-        checker_texture::CheckerTexture, solid_color::SolidColor, NonRecursiveTexture, TextureType,
+        checker_texture::CheckerTexture, image_texture::ImageTexture, solid_color::SolidColor,
+        NonRecursiveTexture, TextureType,
     },
 };
 
@@ -127,6 +128,36 @@ pub fn scene_with_two_checker_spheres() -> Scene {
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 20.0;
     const CENTER: Point3<f64> = Point3::new(13.0, 2.0, 3.0);
+    const LOOK_AT: Point3<f64> = Point3::new(0.0, 0.0, 0.0);
+    let camera = Camera::builder()
+        .width(WIDTH)
+        .aspect_ratio(ASPECT_RATIO)
+        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .max_bounce_depth(MAX_BOUNCE_DEPTH)
+        .vertical_fov_angles(V_FOV)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .build();
+
+    Scene::new(content, camera)
+}
+
+pub fn scene_with_earthmap() -> Scene {
+    let earh_texture = ImageTexture::new("assets/earthmap.jpg").unwrap();
+    let globe_material = Lambertian::new(TextureType::NonRecursive(
+        NonRecursiveTexture::ImageTexture(earh_texture),
+    ));
+    let materials = vec![MaterialType::Lambertian(globe_material)];
+    let globe = HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, 0.0, 0.0), 1.0, 0));
+
+    let content = SceneContent::new(materials, BvhTree::from(vec![globe]));
+
+    const WIDTH: u32 = 1200;
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    const SAMPLES_PER_PIXEL: u32 = 100;
+    const MAX_BOUNCE_DEPTH: u32 = 50;
+    const V_FOV: f64 = 20.0;
+    const CENTER: Point3<f64> = Point3::new(12.0, 0.3, 0.0);
     const LOOK_AT: Point3<f64> = Point3::new(0.0, 0.0, 0.0);
     let camera = Camera::builder()
         .width(WIDTH)
