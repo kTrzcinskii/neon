@@ -1,6 +1,9 @@
 pub mod scene_generator;
 
-use crate::{bvh::BvhTree, camera::Camera, material::MaterialType, rendered_image::RenderedImage};
+use crate::{
+    core::bvh::BvhTree, core::camera::Camera, core::rendered_image::RenderedImage,
+    material::MaterialType,
+};
 
 pub struct Scene {
     content: SceneContent,

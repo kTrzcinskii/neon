@@ -2,7 +2,7 @@ use std::ops::RangeInclusive;
 
 use nalgebra::{Point3, Vector3};
 
-use crate::{aabb::AxisAlignedBoundingBox, object::sphere::Sphere, ray::Ray};
+use crate::{core::aabb::AxisAlignedBoundingBox, object::sphere::Sphere, ray::Ray};
 
 use super::hittable_object::{HitRecord, HittableObject};
 

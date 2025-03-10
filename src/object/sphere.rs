@@ -3,7 +3,7 @@ use std::{f64, ops::RangeInclusive};
 use nalgebra::{Point3, Unit, UnitVector3, Vector3};
 
 use crate::{
-    aabb::AxisAlignedBoundingBox, extensions::ri_surrounds::RangeInclusiveSurroundsExtension,
+    core::aabb::AxisAlignedBoundingBox, extensions::ri_surrounds::RangeInclusiveSurroundsExtension,
     ray::Ray,
 };
 

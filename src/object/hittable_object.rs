@@ -2,7 +2,7 @@ use std::ops::RangeInclusive;
 
 use nalgebra::{Point3, UnitVector3};
 
-use crate::{aabb::AxisAlignedBoundingBox, ray::Ray};
+use crate::{core::aabb::AxisAlignedBoundingBox, ray::Ray};
 
 pub trait HittableObject {
     fn hit(&self, ray: &Ray, t_range: &RangeInclusive<f64>) -> Option<HitRecord>;

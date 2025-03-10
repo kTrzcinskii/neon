@@ -1,11 +1,8 @@
-pub mod aabb;
-pub mod bvh;
-pub mod camera;
+pub mod core;
 pub mod extensions;
 pub mod material;
 pub mod object;
-pub mod random_vector_generator;
 pub mod ray;
-pub mod rendered_image;
 pub mod scene;
 pub mod texture;
+pub mod utils;

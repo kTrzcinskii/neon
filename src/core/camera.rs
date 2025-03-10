@@ -11,15 +11,15 @@ use rgb::Rgb;
 use typed_builder::TypedBuilder;
 
 use crate::{
+    core::rendered_image::{Dimensions, RenderedImage},
     extensions::{
         rgb_f64_to_u8::RgbF64ToU8Extension, rgb_linear_to_gamma::RgbLinearToGammaExtension,
     },
     material::Material,
     object::hittable_object::HittableObject,
-    random_vector_generator,
     ray::Ray,
-    rendered_image::{Dimensions, RenderedImage},
     scene::SceneContent,
+    utils::random_vector_generator,
 };
 
 #[derive(TypedBuilder)]

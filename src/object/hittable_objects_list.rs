@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 
-use crate::aabb::AxisAlignedBoundingBox;
+use crate::core::aabb::AxisAlignedBoundingBox;
 
 use super::{
     hittable_object::{HitRecord, HittableObject},

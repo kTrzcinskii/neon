@@ -5,7 +5,7 @@ use crate::{
         vector_reflection::VectorReflectionExtension, vector_refraction::VectorRefractionExtension,
     },
     object::hittable_object::HitRecord,
-    random_vector_generator,
+    utils::random_vector_generator,
 };
 
 use super::Ray;

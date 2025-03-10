@@ -1,7 +1,7 @@
 use std::ops::RangeInclusive;
 
 use crate::{
-    aabb::AxisAlignedBoundingBox,
+    core::aabb::AxisAlignedBoundingBox,
     object::{
         hittable_object::{HitRecord, HittableObject},
         hittable_objects_list::HittableObjectsList,

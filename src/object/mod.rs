@@ -5,7 +5,7 @@ use hittable_objects_list::HittableObjectsList;
 use moving_sphere::MovingSphere;
 use sphere::Sphere;
 
-use crate::{aabb::AxisAlignedBoundingBox, ray::Ray};
+use crate::{core::aabb::AxisAlignedBoundingBox, ray::Ray};
 
 pub mod hittable_object;
 pub mod hittable_objects_list;

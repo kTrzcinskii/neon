@@ -3,18 +3,18 @@ use rand::Rng;
 use rgb::Rgb;
 
 use crate::{
-    bvh::BvhTree,
-    camera::Camera,
+    core::bvh::BvhTree,
+    core::camera::Camera,
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     object::{
         hittable_objects_list::HittableObjectsList, moving_sphere::MovingSphere, sphere::Sphere,
         HittableObjectType,
     },
-    random_vector_generator,
     texture::{
         checker_texture::CheckerTexture, image_texture::ImageTexture, solid_color::SolidColor,
         NonRecursiveTexture, TextureType,
     },
+    utils::random_vector_generator,
 };
 
 use super::{Scene, SceneContent};
