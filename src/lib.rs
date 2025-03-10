@@ -1,4 +1,5 @@
 pub mod core;
+pub mod effects;
 pub mod extensions;
 pub mod material;
 pub mod object;
