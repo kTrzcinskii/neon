@@ -22,6 +22,9 @@ impl NoiseTexture {
 impl Texture for NoiseTexture {
     fn color_at(&self, _: f64, _: f64, p: &Point3<f64>) -> Rgb<f64> {
         let position = self.scale * p;
-        Rgb::new(1.0, 1.0, 1.0) * self.perlin_noise.noise(&position)
+        let noise = self.perlin_noise.noise(&position);
+        // We need to [-1, 1] to [0, 1]
+        let mapped_noise = (noise + 1.0) * 0.5;
+        Rgb::new(1.0, 1.0, 1.0) * mapped_noise
     }
 }
