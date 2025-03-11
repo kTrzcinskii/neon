@@ -13,7 +13,7 @@ use super::Ray;
 /// Returns a random `Ray` that is on the same hemisphere as
 /// the normal of the `hit_record`.
 pub fn random_ray_on_hemisphere(ray: &Ray, hit_record: &HitRecord) -> Ray {
-    let mut direction = random_vector_generator::random_unit_vector3_in_sphere();
+    let mut direction = random_vector_generator::random_unit_vector3_in_sphere().into_inner();
     if direction.dot(hit_record.normal()) < 0.0 {
         direction = -direction;
     }
@@ -35,7 +35,7 @@ pub fn fuzzed_ray(ray: &Ray, fuzziness: f64) -> Ray {
         return *ray;
     }
     let fuzzed_direction = ray.direction().normalize()
-        + fuzziness * random_vector_generator::random_unit_vector3_in_sphere();
+        + fuzziness * random_vector_generator::random_unit_vector3_in_sphere().into_inner();
     Ray::new(*ray.origin(), fuzzed_direction, ray.time())
 }
 
