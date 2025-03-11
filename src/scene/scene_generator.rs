@@ -173,7 +173,7 @@ pub fn scene_with_earthmap() -> Scene {
 
 pub fn scene_with_perlin_noise() -> Scene {
     let materials = vec![MaterialType::Lambertian(Lambertian::new(
-        TextureType::NonRecursive(NonRecursiveTexture::NoiseTexture(NoiseTexture::new())),
+        TextureType::NonRecursive(NonRecursiveTexture::NoiseTexture(NoiseTexture::new(4.0))),
     ))];
     let bigger = HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, 0));
     let smaller = HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, 0));
