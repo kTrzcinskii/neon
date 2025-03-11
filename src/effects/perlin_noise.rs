@@ -55,6 +55,23 @@ impl PerlinNoise {
         Self::perlin_interpolation(c, u, v, w)
     }
 
+    pub fn turbulance(&self, pos: &Point3<f64>, depth: usize) -> f64 {
+        let initial_acc = 0.0;
+        let initial_weight = 1.0;
+        (0..depth)
+            .fold(
+                (initial_acc, *pos, initial_weight),
+                |(acc, pos, weight), _| {
+                    let new_acc = acc + weight * self.noise(&pos);
+                    let new_weight = weight * 0.5;
+                    let new_pos = pos * 2.0;
+                    (new_acc, new_pos, new_weight)
+                },
+            )
+            .0
+            .abs()
+    }
+
     /// Returns value of perlin interpolation in range `[-1, 1]`
     fn perlin_interpolation(c: [[[Vector3<f64>; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
         let mut acc = 0.0;
