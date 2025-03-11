@@ -19,9 +19,9 @@ pub enum Axis {
 
 impl AxisAlignedBoundingBox {
     pub fn new(start: Point3<f64>, end: Point3<f64>) -> Self {
-        let interval_x = Self::find_interval(start.x, end.x);
-        let interval_y = Self::find_interval(start.y, end.y);
-        let interval_z = Self::find_interval(start.z, end.z);
+        let interval_x = Self::expand_to_mininimum(Self::find_interval(start.x, end.x));
+        let interval_y = Self::expand_to_mininimum(Self::find_interval(start.y, end.y));
+        let interval_z = Self::expand_to_mininimum(Self::find_interval(start.z, end.z));
         AxisAlignedBoundingBox {
             interval_x,
             interval_y,
@@ -32,9 +32,12 @@ impl AxisAlignedBoundingBox {
     /// Merges two `AxisAlignedBoundingBox`s into one containing them both.
     /// Created `AxisAlignedBoundingBox` is as small as possible.
     pub fn merge(b1: &AxisAlignedBoundingBox, b2: &AxisAlignedBoundingBox) -> Self {
-        let interval_x = Self::merge_ranges(&b1.interval_x, &b2.interval_x);
-        let interval_y = Self::merge_ranges(&b1.interval_y, &b2.interval_y);
-        let interval_z = Self::merge_ranges(&b1.interval_z, &b2.interval_z);
+        let interval_x =
+            Self::expand_to_mininimum(Self::merge_ranges(&b1.interval_x, &b2.interval_x));
+        let interval_y =
+            Self::expand_to_mininimum(Self::merge_ranges(&b1.interval_y, &b2.interval_y));
+        let interval_z =
+            Self::expand_to_mininimum(Self::merge_ranges(&b1.interval_z, &b2.interval_z));
         Self {
             interval_x,
             interval_y,
@@ -158,5 +161,14 @@ impl AxisAlignedBoundingBox {
         let start = r1.start().min(*r2.start());
         let end = r1.end().max(*r2.end());
         start..=end
+    }
+
+    fn expand_to_mininimum(range: RangeInclusive<f64>) -> RangeInclusive<f64> {
+        const DELTA: f64 = 0.0001;
+        let diff = range.end() - range.start() - DELTA;
+        if diff >= 0.0 {
+            return range;
+        }
+        *range.start()..=(*range.end() + DELTA.abs())
     }
 }
