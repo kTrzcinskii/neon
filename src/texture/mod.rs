@@ -30,6 +30,36 @@ impl Texture for TextureType {
     }
 }
 
+impl From<NonRecursiveTexture> for TextureType {
+    fn from(value: NonRecursiveTexture) -> Self {
+        TextureType::NonRecursive(value)
+    }
+}
+
+impl From<CheckerTexture> for TextureType {
+    fn from(value: CheckerTexture) -> Self {
+        TextureType::CheckerTexture(value)
+    }
+}
+
+impl From<SolidColor> for TextureType {
+    fn from(value: SolidColor) -> Self {
+        TextureType::NonRecursive(value.into())
+    }
+}
+
+impl From<ImageTexture> for TextureType {
+    fn from(value: ImageTexture) -> Self {
+        TextureType::NonRecursive(value.into())
+    }
+}
+
+impl From<NoiseTexture> for TextureType {
+    fn from(value: NoiseTexture) -> Self {
+        TextureType::NonRecursive(value.into())
+    }
+}
+
 pub enum NonRecursiveTexture {
     SolidColor(SolidColor),
     ImageTexture(ImageTexture),
@@ -43,5 +73,23 @@ impl Texture for NonRecursiveTexture {
             NonRecursiveTexture::ImageTexture(image_texture) => image_texture.color_at(u, v, p),
             NonRecursiveTexture::NoiseTexture(noise_texture) => noise_texture.color_at(u, v, p),
         }
+    }
+}
+
+impl From<SolidColor> for NonRecursiveTexture {
+    fn from(value: SolidColor) -> Self {
+        NonRecursiveTexture::SolidColor(value)
+    }
+}
+
+impl From<ImageTexture> for NonRecursiveTexture {
+    fn from(value: ImageTexture) -> Self {
+        NonRecursiveTexture::ImageTexture(value)
+    }
+}
+
+impl From<NoiseTexture> for NonRecursiveTexture {
+    fn from(value: NoiseTexture) -> Self {
+        NonRecursiveTexture::NoiseTexture(value)
     }
 }
