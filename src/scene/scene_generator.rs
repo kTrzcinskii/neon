@@ -5,13 +5,10 @@ use rgb::Rgb;
 use crate::{
     core::{bvh::BvhTree, camera::Camera},
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
-    object::{
-        hittable_objects_list::HittableObjectsList, moving_sphere::MovingSphere, quad::Quad,
-        sphere::Sphere, HittableObjectType,
-    },
+    object::{moving_sphere::MovingSphere, quad::Quad, sphere::Sphere, HittableObjectType},
     texture::{
         checker_texture::CheckerTexture, image_texture::ImageTexture, noise_texture::NoiseTexture,
-        solid_color::SolidColor, NonRecursiveTexture, TextureType,
+        solid_color::SolidColor,
     },
     utils::random_vector_generator,
 };
@@ -21,40 +18,23 @@ use super::{Scene, SceneContent};
 pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
     // Materials
     let mut materials = generate_random_materials(rows, cols);
-    let material_ground = MaterialType::Lambertian(Lambertian::from(Rgb::new(0.5, 0.5, 0.5)));
+    let material_ground = Lambertian::from(Rgb::new(0.5, 0.5, 0.5)).into();
     materials.push(material_ground);
-    let glass = MaterialType::Dielectric(Dielectric::new(1.5));
+    let glass = Dielectric::new(1.5).into();
     materials.push(glass);
-    let lambertian = MaterialType::Lambertian(Lambertian::from(Rgb::new(0.4, 0.2, 0.1)));
+    let lambertian = Lambertian::from(Rgb::new(0.4, 0.2, 0.1)).into();
     materials.push(lambertian);
-    let metal = MaterialType::Metal(Metal::new(Rgb::new(0.7, 0.6, 0.5), 0.0));
+    let metal = Metal::new(Rgb::new(0.7, 0.6, 0.5), 0.0).into();
     materials.push(metal);
 
     // Objects
-    let spheres = generate_random_spheres(rows, cols);
-    let mut world = HittableObjectsList::from(spheres);
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        materials.len() - 4,
-    )));
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(0.0, 1.0, 0.0),
-        1.0,
-        materials.len() - 3,
-    )));
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(-4.0, 1.0, 0.0),
-        1.0,
-        materials.len() - 2,
-    )));
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(4.0, 1.0, 0.0),
-        1.0,
-        materials.len() - 1,
-    )));
+    let mut world = generate_random_spheres(rows, cols);
+    world.push(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, materials.len() - 4).into());
+    world.push(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, materials.len() - 3).into());
+    world.push(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, materials.len() - 2).into());
+    world.push(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, materials.len() - 1).into());
 
-    let content = SceneContent::new(materials, BvhTree::from(world));
+    let content = SceneContent::new(materials, world.into());
     let camera = build_camera_for_spheres();
     Scene::new(content, camera)
 }
@@ -62,54 +42,36 @@ pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
 pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
     // Materials
     let mut materials = generate_random_materials(rows, cols);
-    let checker_even = NonRecursiveTexture::SolidColor(SolidColor::new(Rgb::new(0.2, 0.3, 0.1)));
-    let checker_odd = NonRecursiveTexture::SolidColor(SolidColor::new(Rgb::new(0.9, 0.9, 0.9)));
-    let checker = CheckerTexture::new(0.32, checker_even, checker_odd);
-    let material_ground =
-        MaterialType::Lambertian(Lambertian::new(TextureType::CheckerTexture(checker)));
+    let checker_even = SolidColor::new(Rgb::new(0.2, 0.3, 0.1));
+    let checker_odd = SolidColor::new(Rgb::new(0.9, 0.9, 0.9));
+    let checker = CheckerTexture::new(0.32, checker_even.into(), checker_odd.into());
+    let material_ground = Lambertian::new(checker.into()).into();
     materials.push(material_ground);
-    let glass = MaterialType::Dielectric(Dielectric::new(1.5));
+    let glass = Dielectric::new(1.5).into();
     materials.push(glass);
-    let lambertian = MaterialType::Lambertian(Lambertian::from(Rgb::new(0.4, 0.2, 0.1)));
+    let lambertian = Lambertian::from(Rgb::new(0.4, 0.2, 0.1)).into();
     materials.push(lambertian);
-    let metal = MaterialType::Metal(Metal::new(Rgb::new(0.7, 0.6, 0.5), 0.0));
+    let metal = Metal::new(Rgb::new(0.7, 0.6, 0.5), 0.0).into();
     materials.push(metal);
 
     // Objects
-    let spheres = generate_random_moving_spheres(rows, cols);
-    let mut world = HittableObjectsList::from(spheres);
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        materials.len() - 4,
-    )));
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(0.0, 1.0, 0.0),
-        1.0,
-        materials.len() - 3,
-    )));
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(-4.0, 1.0, 0.0),
-        1.0,
-        materials.len() - 2,
-    )));
-    world.add(HittableObjectType::Sphere(Sphere::new(
-        Point3::new(4.0, 1.0, 0.0),
-        1.0,
-        materials.len() - 1,
-    )));
+    let mut world = generate_random_moving_spheres(rows, cols);
+    world.push(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, materials.len() - 4).into());
+    world.push(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, materials.len() - 3).into());
+    world.push(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, materials.len() - 2).into());
+    world.push(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, materials.len() - 1).into());
 
-    let content = SceneContent::new(materials, BvhTree::from(world));
+    let content = SceneContent::new(materials, world.into());
     let camera = build_camera_for_spheres();
     Scene::new(content, camera)
 }
 
 pub fn scene_with_two_checker_spheres() -> Scene {
     // Materials
-    let checker_even = NonRecursiveTexture::SolidColor(SolidColor::new(Rgb::new(0.2, 0.3, 0.1)));
-    let checker_odd = NonRecursiveTexture::SolidColor(SolidColor::new(Rgb::new(0.9, 0.9, 0.9)));
-    let checker = CheckerTexture::new(0.32, checker_even, checker_odd);
-    let material = MaterialType::Lambertian(Lambertian::new(TextureType::CheckerTexture(checker)));
+    let checker_even = SolidColor::new(Rgb::new(0.2, 0.3, 0.1));
+    let checker_odd = SolidColor::new(Rgb::new(0.9, 0.9, 0.9));
+    let checker = CheckerTexture::new(0.32, checker_even.into(), checker_odd.into());
+    let material = Lambertian::new(checker.into()).into();
     let materials = vec![material];
 
     // Objects
@@ -118,7 +80,7 @@ pub fn scene_with_two_checker_spheres() -> Scene {
         HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, 10.0, 0.0), 10.0, 0)),
     ];
 
-    let content = SceneContent::new(materials, BvhTree::from(world));
+    let content = SceneContent::new(materials, world.into());
 
     // Camera
     const WIDTH: u32 = 1200;
@@ -143,11 +105,9 @@ pub fn scene_with_two_checker_spheres() -> Scene {
 
 pub fn scene_with_earthmap() -> Scene {
     let earh_texture = ImageTexture::new("assets/earthmap.jpg").unwrap();
-    let globe_material = Lambertian::new(TextureType::NonRecursive(
-        NonRecursiveTexture::ImageTexture(earh_texture),
-    ));
-    let materials = vec![MaterialType::Lambertian(globe_material)];
-    let globe = HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, 0.0, 0.0), 1.0, 0));
+    let globe_material = Lambertian::new(earh_texture.into()).into();
+    let materials = vec![globe_material];
+    let globe = Sphere::new(Point3::new(0.0, 0.0, 0.0), 1.0, 0).into();
 
     let content = SceneContent::new(materials, BvhTree::from(vec![globe]));
 
@@ -172,11 +132,9 @@ pub fn scene_with_earthmap() -> Scene {
 }
 
 pub fn scene_with_perlin_noise() -> Scene {
-    let materials = vec![MaterialType::Lambertian(Lambertian::new(
-        TextureType::NonRecursive(NonRecursiveTexture::NoiseTexture(NoiseTexture::new(4.0))),
-    ))];
-    let bigger = HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, 0));
-    let smaller = HittableObjectType::Sphere(Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, 0));
+    let materials = vec![Lambertian::new(NoiseTexture::new(4.0).into()).into()];
+    let bigger = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, 0).into();
+    let smaller = Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, 0).into();
 
     let content = SceneContent::new(materials, BvhTree::from(vec![bigger, smaller]));
 
@@ -280,16 +238,16 @@ fn generate_random_materials(rows: usize, cols: usize) -> Vec<MaterialType> {
                     .zip(color_vec.iter())
                     .map(|(x, y)| x * y)
                     .collect();
-                MaterialType::Lambertian(Lambertian::from(albedo))
+                Lambertian::from(albedo).into()
             } else if choose_material < 0.95 {
                 let albedo: Rgb<f64> = random_vector_generator::random_vector3(0.5..1.0)
                     .into_iter()
                     .copied()
                     .collect();
                 let fuzziness: f64 = rng.random();
-                MaterialType::Metal(Metal::new(albedo, fuzziness))
+                Metal::new(albedo, fuzziness).into()
             } else {
-                MaterialType::Dielectric(Dielectric::new(1.5))
+                Dielectric::new(1.5).into()
             }
         })
         .collect()
@@ -308,7 +266,7 @@ fn generate_random_spheres(rows: usize, cols: usize) -> Vec<HittableObjectType> 
                 j as f64 + 0.9 * rng.random::<f64>(),
             );
             let id = (i + half_rows) as usize * rows + (j + half_rows) as usize;
-            let obj = HittableObjectType::Sphere(Sphere::new(center, 0.2, id));
+            let obj = Sphere::new(center, 0.2, id).into();
             output.push(obj);
         }
     }
@@ -329,7 +287,7 @@ fn generate_random_moving_spheres(rows: usize, cols: usize) -> Vec<HittableObjec
             );
             let to = from + Vector3::new(0.0, rng.random::<f64>() / 2.0, 0.0);
             let id = (i + half_rows) as usize * rows + (j + half_rows) as usize;
-            let obj = HittableObjectType::MovingSphere(MovingSphere::new(from, to, 0.2, id));
+            let obj = MovingSphere::new(from, to, 0.2, id).into();
             output.push(obj);
         }
     }
