@@ -6,8 +6,8 @@ use crate::{
     core::{bvh::BvhTree, camera::Camera},
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     object::{
-        hittable_objects_list::HittableObjectsList, moving_sphere::MovingSphere, sphere::Sphere,
-        HittableObjectType,
+        hittable_objects_list::HittableObjectsList, moving_sphere::MovingSphere, quad::Quad,
+        sphere::Sphere, HittableObjectType,
     },
     texture::{
         checker_texture::CheckerTexture, image_texture::ImageTexture, noise_texture::NoiseTexture,
@@ -186,6 +186,73 @@ pub fn scene_with_perlin_noise() -> Scene {
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 20.0;
     const CENTER: Point3<f64> = Point3::new(13.0, 2.0, 3.0);
+    const LOOK_AT: Point3<f64> = Point3::new(0.0, 0.0, 0.0);
+    let camera = Camera::builder()
+        .width(WIDTH)
+        .aspect_ratio(ASPECT_RATIO)
+        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .max_bounce_depth(MAX_BOUNCE_DEPTH)
+        .vertical_fov_angles(V_FOV)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .build();
+
+    Scene::new(content, camera)
+}
+
+pub fn scene_with_quads() -> Scene {
+    let left_red: MaterialType = Lambertian::from(Rgb::new(1.0, 0.2, 0.2)).into();
+    let back_green: MaterialType = Lambertian::from(Rgb::new(0.2, 1.0, 0.2)).into();
+    let right_blue: MaterialType = Lambertian::from(Rgb::new(0.2, 0.2, 1.0)).into();
+    let upper_orange: MaterialType = Lambertian::from(Rgb::new(1.0, 0.5, 0.0)).into();
+    let lower_teal: MaterialType = Lambertian::from(Rgb::new(0.2, 0.8, 0.8)).into();
+    let materials = vec![left_red, back_green, right_blue, upper_orange, lower_teal];
+
+    let left: HittableObjectType = Quad::new(
+        Point3::new(-3.0, -2.0, 5.0),
+        Vector3::new(0.0, 0.0, -4.0),
+        Vector3::new(0.0, 4.0, 0.0),
+        0,
+    )
+    .into();
+    let back: HittableObjectType = Quad::new(
+        Point3::new(-2.0, -2.0, 0.0),
+        Vector3::new(4.0, 0.0, 0.0),
+        Vector3::new(0.0, 4.0, 0.0),
+        1,
+    )
+    .into();
+    let right: HittableObjectType = Quad::new(
+        Point3::new(3.0, -2.0, 1.0),
+        Vector3::new(0.0, 0.0, 4.0),
+        Vector3::new(0.0, 4.0, 0.0),
+        2,
+    )
+    .into();
+    let upper: HittableObjectType = Quad::new(
+        Point3::new(-2.0, 3.0, 1.0),
+        Vector3::new(4.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 4.0),
+        3,
+    )
+    .into();
+    let lower: HittableObjectType = Quad::new(
+        Point3::new(-2.0, -3.0, 5.0),
+        Vector3::new(4.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, -4.0),
+        4,
+    )
+    .into();
+    let objects = vec![left, back, right, upper, lower];
+
+    let content = SceneContent::new(materials, objects.into());
+
+    const WIDTH: u32 = 800;
+    const ASPECT_RATIO: f64 = 1.0;
+    const SAMPLES_PER_PIXEL: u32 = 100;
+    const MAX_BOUNCE_DEPTH: u32 = 50;
+    const V_FOV: f64 = 80.0;
+    const CENTER: Point3<f64> = Point3::new(0.0, 0.0, 9.0);
     const LOOK_AT: Point3<f64> = Point3::new(0.0, 0.0, 0.0);
     let camera = Camera::builder()
         .width(WIDTH)
