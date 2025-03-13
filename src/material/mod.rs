@@ -29,6 +29,24 @@ impl Material for MaterialType {
     }
 }
 
+impl From<Lambertian> for MaterialType {
+    fn from(value: Lambertian) -> Self {
+        Self::Lambertian(value)
+    }
+}
+
+impl From<Metal> for MaterialType {
+    fn from(value: Metal) -> Self {
+        Self::Metal(value)
+    }
+}
+
+impl From<Dielectric> for MaterialType {
+    fn from(value: Dielectric) -> Self {
+        Self::Dielectric(value)
+    }
+}
+
 pub struct MaterialScattering {
     attenuation: Rgb<f64>,
     scattered_ray: Ray,
