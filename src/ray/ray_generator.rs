@@ -13,16 +13,18 @@ use super::Ray;
 /// Returns a random `Ray` that is on the same hemisphere as
 /// the normal of the `hit_record`.
 pub fn random_ray_on_hemisphere(ray: &Ray, hit_record: &HitRecord) -> Ray {
-    let mut direction = random_vector_generator::random_unit_vector3_in_sphere().into_inner();
-    if direction.dot(hit_record.normal()) < 0.0 {
-        direction = -direction;
+    let random_unit = random_vector_generator::random_unit_vector3_in_sphere().into_inner();
+    let scatter_direction = hit_record.normal().into_inner() + random_unit;
+    // Check for degenerate case (near-zero vector)
+    if scatter_direction.iter().all(|x| x.abs() < 1e-8) {
+        // In this case just use the normal
+        return Ray::new(
+            *hit_record.pos(),
+            hit_record.normal().into_inner(),
+            ray.time(),
+        );
     }
-    direction += hit_record.normal().into_inner();
-    // Fix case of "almost" zero vector
-    if direction.iter().all(|x| x.abs() < 1e-8) {
-        direction = hit_record.normal().into_inner();
-    }
-    Ray::new(*hit_record.pos(), direction, ray.time())
+    Ray::new(*hit_record.pos(), scatter_direction, ray.time())
 }
 
 pub fn reflected_ray(ray: &Ray, hit_record: &HitRecord) -> Ray {
