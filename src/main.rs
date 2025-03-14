@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     // const ROWS: usize = 24;
     // const COLS: usize = 24;
 
-    let scene = scene_generator::scene_with_quads();
+    let scene = scene_generator::scene_with_empty_cornell_box();
 
     // Render
     info!("Starting rendering");

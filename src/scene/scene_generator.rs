@@ -4,8 +4,12 @@ use rgb::Rgb;
 
 use crate::{
     core::{bvh::BvhTree, camera::Camera},
-    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
+    material::{
+        dielectric::Dielectric, diffuse_light::DiffuseLight, lambertian::Lambertian, metal::Metal,
+        MaterialType,
+    },
     object::{moving_sphere::MovingSphere, quad::Quad, sphere::Sphere, HittableObjectType},
+    scene::SceneOptions,
     texture::{
         checker_texture::CheckerTexture, image_texture::ImageTexture, noise_texture::NoiseTexture,
         solid_color::SolidColor,
@@ -223,6 +227,139 @@ pub fn scene_with_quads() -> Scene {
         .build();
 
     Scene::new(content, camera, Default::default())
+}
+
+pub fn scene_with_simple_light() -> Scene {
+    let perlin_texture = Lambertian::new(NoiseTexture::new(4.0).into()).into();
+    // Brighter than (1,1,1) to light things around it
+    let light = DiffuseLight::from(Rgb::new(4.0, 4.0, 4.0)).into();
+    let materials = vec![perlin_texture, light];
+
+    let ground = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, 0).into();
+    let main_object = Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, 0).into();
+    let quad_light = Quad::new(
+        Point3::new(3.0, 1.0, -2.0),
+        Vector3::new(2.0, 0.0, 0.0),
+        Vector3::new(0.0, 2.0, 0.0),
+        1,
+    )
+    .into();
+    let sphere_light = Sphere::new(Point3::new(0.0, 7.0, 0.0), 2.0, 1).into();
+    let world = vec![ground, main_object, quad_light, sphere_light];
+
+    let content = SceneContent::new(materials, world.into());
+
+    const WIDTH: u32 = 1200;
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    const SAMPLES_PER_PIXEL: u32 = 100;
+    const MAX_BOUNCE_DEPTH: u32 = 50;
+    const V_FOV: f64 = 20.0;
+    const CENTER: Point3<f64> = Point3::new(26.0, 3.0, 6.0);
+    const LOOK_AT: Point3<f64> = Point3::new(0.0, 2.0, 0.0);
+    let camera = Camera::builder()
+        .width(WIDTH)
+        .aspect_ratio(ASPECT_RATIO)
+        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .max_bounce_depth(MAX_BOUNCE_DEPTH)
+        .vertical_fov_angles(V_FOV)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .build();
+
+    const BACKGROUND_COLOR: Rgb<f64> = Rgb::new(0.0, 0.0, 0.0);
+    let options = SceneOptions::builder().background(BACKGROUND_COLOR).build();
+
+    Scene::new(content, camera, options)
+}
+
+pub fn scene_with_empty_cornell_box() -> Scene {
+    let light = DiffuseLight::from(Rgb::new(15.0, 15.0, 15.0)).into();
+    let red = Lambertian::from(Rgb::new(0.65, 0.05, 0.05)).into();
+    let white = Lambertian::from(Rgb::new(0.73, 0.73, 0.73)).into();
+    let green = Lambertian::from(Rgb::new(0.12, 0.45, 0.15)).into();
+    let materials = vec![light, red, white, green];
+
+    let green_quad = Quad::new(
+        Point3::new(555.0, 0.0, 0.0),
+        Vector3::new(0.0, 555.0, 0.0),
+        Vector3::new(0.0, 0.0, 555.0),
+        3,
+    )
+    .into();
+
+    let red_quad = Quad::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vector3::new(0.0, 555.0, 0.0),
+        Vector3::new(0.0, 0.0, 555.0),
+        1,
+    )
+    .into();
+
+    let white_bottom_quad = Quad::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vector3::new(555.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 555.0),
+        2,
+    )
+    .into();
+
+    let white_mid_quad = Quad::new(
+        Point3::new(555.0, 555.0, 555.0),
+        Vector3::new(-555.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, -555.0),
+        2,
+    )
+    .into();
+
+    let white_upper_quad = Quad::new(
+        Point3::new(0.0, 0.0, 555.0),
+        Vector3::new(555.0, 0.0, 0.0),
+        Vector3::new(0.0, 555.0, 0.0),
+        2,
+    )
+    .into();
+
+    let light_source = Quad::new(
+        Point3::new(343.0, 554.0, 332.0),
+        Vector3::new(-130.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, -105.0),
+        0,
+    )
+    .into();
+
+    let world = vec![
+        green_quad,
+        red_quad,
+        white_bottom_quad,
+        white_mid_quad,
+        white_upper_quad,
+        light_source,
+    ];
+
+    let content = SceneContent::new(materials, world.into());
+
+    const WIDTH: u32 = 800;
+    const ASPECT_RATIO: f64 = 1.0;
+    const SAMPLES_PER_PIXEL: u32 = 100;
+    const MAX_BOUNCE_DEPTH: u32 = 50;
+    const V_FOV: f64 = 40.0;
+    const CENTER: Point3<f64> = Point3::new(278.0, 278.0, -800.0);
+    const LOOK_AT: Point3<f64> = Point3::new(278.0, 278.0, 0.0);
+    let camera = Camera::builder()
+        .width(WIDTH)
+        .aspect_ratio(ASPECT_RATIO)
+        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .max_bounce_depth(MAX_BOUNCE_DEPTH)
+        .vertical_fov_angles(V_FOV)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .build();
+
+    let options = SceneOptions::builder()
+        .background(Rgb::new(0.0, 0.0, 0.0))
+        .build();
+
+    Scene::new(content, camera, options)
 }
 
 fn generate_random_materials(rows: usize, cols: usize) -> Vec<MaterialType> {
