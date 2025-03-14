@@ -340,7 +340,7 @@ pub fn scene_with_empty_cornell_box() -> Scene {
 
     const WIDTH: u32 = 800;
     const ASPECT_RATIO: f64 = 1.0;
-    const SAMPLES_PER_PIXEL: u32 = 100;
+    const SAMPLES_PER_PIXEL: u32 = 500;
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 40.0;
     const CENTER: Point3<f64> = Point3::new(278.0, 278.0, -800.0);

@@ -1,3 +1,4 @@
+use nalgebra::Point3;
 use rgb::Rgb;
 
 use crate::{
@@ -32,7 +33,7 @@ impl Material for DiffuseLight {
         None
     }
 
-    fn emitted(&self, u: f64, v: f64, pos: &nalgebra::Point3<f64>) -> Rgb<f64> {
+    fn emitted(&self, u: f64, v: f64, pos: &Point3<f64>) -> Rgb<f64> {
         self.texture.color_at(u, v, pos)
     }
 }
