@@ -1,22 +1,30 @@
 pub mod scene_generator;
 
+use rgb::Rgb;
+use typed_builder::TypedBuilder;
+
 use crate::{
     core::bvh::BvhTree, core::camera::Camera, core::rendered_image::RenderedImage,
     material::MaterialType,
 };
 
 pub struct Scene {
-    content: SceneContent,
     camera: Camera,
+    content: SceneContent,
+    options: SceneOptions,
 }
 
 impl Scene {
-    pub fn new(content: SceneContent, camera: Camera) -> Self {
-        Self { content, camera }
+    pub fn new(content: SceneContent, camera: Camera, options: SceneOptions) -> Self {
+        Self {
+            content,
+            camera,
+            options,
+        }
     }
 
     pub fn render(&self) -> RenderedImage {
-        self.camera.render(&self.content)
+        self.camera.render(&self.content, &self.options)
     }
 }
 
@@ -39,5 +47,25 @@ impl SceneContent {
             return None;
         }
         Some(&self.materials[id])
+    }
+}
+
+// TODO: for background use texture instead of color
+#[derive(TypedBuilder)]
+pub struct SceneOptions {
+    background: Rgb<f64>,
+}
+
+impl SceneOptions {
+    pub fn background(&self) -> &Rgb<f64> {
+        &self.background
+    }
+}
+
+impl Default for SceneOptions {
+    fn default() -> Self {
+        Self {
+            background: Rgb::new(0.7, 0.8, 1.0),
+        }
     }
 }

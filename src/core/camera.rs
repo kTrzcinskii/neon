@@ -18,7 +18,7 @@ use crate::{
     material::Material,
     object::hittable_object::HittableObject,
     ray::Ray,
-    scene::SceneContent,
+    scene::{SceneContent, SceneOptions},
     utils::random_vector_generator,
 };
 
@@ -68,7 +68,11 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn render(&self, scene_content: &SceneContent) -> RenderedImage {
+    pub fn render(
+        &self,
+        scene_content: &SceneContent,
+        scene_options: &SceneOptions,
+    ) -> RenderedImage {
         let (tx, rx) = channel::<()>();
 
         let progress_handler = self.spawn_progress_thread(rx);
@@ -82,7 +86,7 @@ impl Camera {
                         let color = (0..self.samples_per_pixel)
                             .map(|_| {
                                 let ray = self.create_ray_around_pixel(i, j);
-                                self.calculate_color(&ray, scene_content, 0)
+                                self.calculate_color(&ray, scene_content, scene_options, 0)
                             })
                             .fold(Rgb::new(0.0, 0.0, 0.0), |acc, color| acc + color);
                         tx.send(()).unwrap();
@@ -99,7 +103,13 @@ impl Camera {
         RenderedImage::new(pixels, self.dimensions).unwrap()
     }
 
-    fn calculate_color(&self, ray: &Ray, scene_content: &SceneContent, depth: u32) -> Rgb<f64> {
+    fn calculate_color(
+        &self,
+        ray: &Ray,
+        scene_content: &SceneContent,
+        scene_options: &SceneOptions,
+        depth: u32,
+    ) -> Rgb<f64> {
         if depth >= self.max_bounce_depth {
             return Rgb {
                 r: 0.0,
@@ -116,39 +126,28 @@ impl Camera {
             let material = scene_content
                 .material_by_id(hit_record.material_id())
                 .unwrap();
+            let emitted_color = material.emitted(hit_record.u(), hit_record.v(), hit_record.pos());
             match material.scatter(ray, &hit_record) {
                 Some(material_scattering) => {
                     let next_color = self.calculate_color(
                         material_scattering.scattered_ray(),
                         scene_content,
+                        scene_options,
                         depth + 1,
                     );
-                    let final_color: Rgb<f64> = next_color
+                    let scattered_color: Rgb<f64> = next_color
                         .iter()
                         .zip(material_scattering.attenuation().iter())
                         .map(|(x, y)| x * y)
                         .collect();
-                    return final_color;
+                    return scattered_color + emitted_color;
                 }
-                None => {
-                    return Rgb {
-                        r: 0.0,
-                        g: 0.0,
-                        b: 0.0,
-                    };
-                }
+                None => return emitted_color,
             }
         }
 
-        let white = Vector3::new(1.0, 1.0, 1.0);
-        let blue = Vector3::new(0.5, 0.7, 1.0);
-        let scale = 0.5 * (ray.direction().y + 1.0);
-        let color = white.lerp(&blue, scale);
-        Rgb {
-            r: color.x,
-            g: color.y,
-            b: color.z,
-        }
+        // Ray hit nothing - just return background color
+        *scene_options.background()
     }
 
     /// Create ray originating in a defocus disk and directed and random pixel around

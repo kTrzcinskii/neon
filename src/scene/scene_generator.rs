@@ -36,7 +36,7 @@ pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
 
     let content = SceneContent::new(materials, world.into());
     let camera = build_camera_for_spheres();
-    Scene::new(content, camera)
+    Scene::new(content, camera, Default::default())
 }
 
 pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
@@ -63,7 +63,7 @@ pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
 
     let content = SceneContent::new(materials, world.into());
     let camera = build_camera_for_spheres();
-    Scene::new(content, camera)
+    Scene::new(content, camera, Default::default())
 }
 
 pub fn scene_with_two_checker_spheres() -> Scene {
@@ -100,7 +100,7 @@ pub fn scene_with_two_checker_spheres() -> Scene {
         .look_at(LOOK_AT)
         .build();
 
-    Scene::new(content, camera)
+    Scene::new(content, camera, Default::default())
 }
 
 pub fn scene_with_earthmap() -> Scene {
@@ -128,7 +128,7 @@ pub fn scene_with_earthmap() -> Scene {
         .look_at(LOOK_AT)
         .build();
 
-    Scene::new(content, camera)
+    Scene::new(content, camera, Default::default())
 }
 
 pub fn scene_with_perlin_noise() -> Scene {
@@ -155,7 +155,7 @@ pub fn scene_with_perlin_noise() -> Scene {
         .look_at(LOOK_AT)
         .build();
 
-    Scene::new(content, camera)
+    Scene::new(content, camera, Default::default())
 }
 
 pub fn scene_with_quads() -> Scene {
@@ -222,7 +222,7 @@ pub fn scene_with_quads() -> Scene {
         .look_at(LOOK_AT)
         .build();
 
-    Scene::new(content, camera)
+    Scene::new(content, camera, Default::default())
 }
 
 fn generate_random_materials(rows: usize, cols: usize) -> Vec<MaterialType> {
