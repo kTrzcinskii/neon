@@ -4,6 +4,7 @@ use crate::{
     core::aabb::AxisAlignedBoundingBox,
     object::{
         hittable_object::{HitRecord, HittableObject},
+        hittable_objects_list::HittableObjectsList,
         HittableObjectType,
     },
     ray::Ray,
@@ -144,6 +145,13 @@ impl From<Vec<HittableObjectType>> for BvhTree {
         let root = Self::new_node(&nodes, left, right);
         nodes[0] = BvhValue::Node(root);
         Self { nodes }
+    }
+}
+
+impl From<HittableObjectsList> for BvhTree {
+    fn from(value: HittableObjectsList) -> Self {
+        let items = Vec::from(value.items());
+        BvhTree::from(items)
     }
 }
 
