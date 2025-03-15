@@ -52,6 +52,18 @@ impl HitRecord {
         }
     }
 
+    pub fn with_changed_pos(new_pos: Point3<f64>, other: &HitRecord) -> Self {
+        HitRecord {
+            pos: new_pos,
+            normal: other.normal,
+            t: other.t,
+            front_face: other.front_face,
+            material_id: other.material_id,
+            u: other.u,
+            v: other.v,
+        }
+    }
+
     pub fn pos(&self) -> &Point3<f64> {
         &self.pos
     }

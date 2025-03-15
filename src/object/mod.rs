@@ -5,6 +5,7 @@ use hittable_objects_list::HittableObjectsList;
 use moving_sphere::MovingSphere;
 use quad::Quad;
 use sphere::Sphere;
+use translate_decorator::TranslateDecorator;
 
 use crate::{core::aabb::AxisAlignedBoundingBox, ray::Ray};
 
@@ -13,6 +14,7 @@ pub mod hittable_objects_list;
 pub mod moving_sphere;
 pub mod quad;
 pub mod sphere;
+pub mod translate_decorator;
 
 #[derive(Clone)]
 pub enum HittableObjectType {
@@ -20,6 +22,7 @@ pub enum HittableObjectType {
     MovingSphere(MovingSphere),
     Quad(Quad),
     HittableObjectList(HittableObjectsList),
+    TranslateDecorator(TranslateDecorator),
 }
 
 impl HittableObject for HittableObjectType {
@@ -31,6 +34,9 @@ impl HittableObject for HittableObjectType {
             HittableObjectType::HittableObjectList(hittable_objects_list) => {
                 hittable_objects_list.hit(ray, t_range)
             }
+            HittableObjectType::TranslateDecorator(translate_decorator) => {
+                translate_decorator.hit(ray, t_range)
+            }
         }
     }
 
@@ -41,6 +47,9 @@ impl HittableObject for HittableObjectType {
             HittableObjectType::Quad(quad) => quad.bounding_box(),
             HittableObjectType::HittableObjectList(hittable_objects_list) => {
                 hittable_objects_list.bounding_box()
+            }
+            HittableObjectType::TranslateDecorator(translate_decorator) => {
+                translate_decorator.bounding_box()
             }
         }
     }
@@ -67,5 +76,11 @@ impl From<Quad> for HittableObjectType {
 impl From<HittableObjectsList> for HittableObjectType {
     fn from(value: HittableObjectsList) -> Self {
         HittableObjectType::HittableObjectList(value)
+    }
+}
+
+impl From<TranslateDecorator> for HittableObjectType {
+    fn from(value: TranslateDecorator) -> Self {
+        HittableObjectType::TranslateDecorator(value)
     }
 }

@@ -1,8 +1,8 @@
 use std::{cmp::Ordering, ops::RangeInclusive};
 
-use nalgebra::Point3;
+use nalgebra::{Point3, Vector3};
 
-use crate::ray::Ray;
+use crate::{extensions::ri_move_by_offset::RangeInclusiveMoveByOffsetExtension, ray::Ray};
 
 #[derive(Clone)]
 pub struct AxisAlignedBoundingBox {
@@ -23,6 +23,18 @@ impl AxisAlignedBoundingBox {
         let interval_y = Self::expand_to_mininimum(Self::find_interval(start.y, end.y));
         let interval_z = Self::expand_to_mininimum(Self::find_interval(start.z, end.z));
         AxisAlignedBoundingBox {
+            interval_x,
+            interval_y,
+            interval_z,
+        }
+    }
+
+    /// Returns new `AxisAlignedBoundingBox` that is moved by `offset`
+    pub fn moved_by_offset(aabb: &AxisAlignedBoundingBox, offset: &Vector3<f64>) -> Self {
+        let interval_x = aabb.interval_x.move_by_offset(offset.x);
+        let interval_y = aabb.interval_y.move_by_offset(offset.y);
+        let interval_z = aabb.interval_z.move_by_offset(offset.z);
+        Self {
             interval_x,
             interval_y,
             interval_z,
