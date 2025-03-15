@@ -4,9 +4,6 @@ use anyhow::{bail, Result};
 use log::{error, info};
 use neon::scene::scene_generator;
 
-// TODO: after second book:
-// - add loading/saving scenes to files
-
 fn main() -> Result<()> {
     env_logger::init();
 
@@ -20,7 +17,7 @@ fn main() -> Result<()> {
     // const ROWS: usize = 24;
     // const COLS: usize = 24;
 
-    let scene = scene_generator::scene_with_empty_cornell_box();
+    let scene = scene_generator::scene_with_cornell_box();
 
     // Render
     info!("Starting rendering");

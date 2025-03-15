@@ -8,7 +8,10 @@ use crate::{
         dielectric::Dielectric, diffuse_light::DiffuseLight, lambertian::Lambertian, metal::Metal,
         MaterialType,
     },
-    object::{moving_sphere::MovingSphere, quad::Quad, sphere::Sphere, HittableObjectType},
+    object::{
+        moving_sphere::MovingSphere, quad::Quad, rotate_y_decorator::RotateYDecorator,
+        sphere::Sphere, translate_decorator::TranslateDecorator, HittableObjectType,
+    },
     scene::SceneOptions,
     texture::{
         checker_texture::CheckerTexture, image_texture::ImageTexture, noise_texture::NoiseTexture,
@@ -272,7 +275,7 @@ pub fn scene_with_simple_light() -> Scene {
     Scene::new(content, camera, options)
 }
 
-pub fn scene_with_empty_cornell_box() -> Scene {
+pub fn scene_with_cornell_box() -> Scene {
     let light = DiffuseLight::from(Rgb::new(15.0, 15.0, 15.0)).into();
     let red = Lambertian::from(Rgb::new(0.65, 0.05, 0.05)).into();
     let white = Lambertian::from(Rgb::new(0.73, 0.73, 0.73)).into();
@@ -327,6 +330,26 @@ pub fn scene_with_empty_cornell_box() -> Scene {
     )
     .into();
 
+    let cuboid_bigger = Quad::cuboid(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
+        2,
+    )
+    .into();
+    let cuboid_bigger = RotateYDecorator::new(cuboid_bigger, 15.0).into();
+    let cuboid_bigger =
+        TranslateDecorator::new(cuboid_bigger, Vector3::new(265.0, 0.0, 295.0)).into();
+
+    let cuboid_smaller = Quad::cuboid(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 165.0, 165.0),
+        2,
+    )
+    .into();
+    let cuboid_smaller = RotateYDecorator::new(cuboid_smaller, -18.0).into();
+    let cuboid_smaller =
+        TranslateDecorator::new(cuboid_smaller, Vector3::new(130.0, 0.0, 65.0)).into();
+
     let world = vec![
         green_quad,
         red_quad,
@@ -334,14 +357,16 @@ pub fn scene_with_empty_cornell_box() -> Scene {
         white_mid_quad,
         white_upper_quad,
         light_source,
+        cuboid_smaller,
+        cuboid_bigger,
     ];
 
     let content = SceneContent::new(materials, world.into());
 
     const WIDTH: u32 = 800;
     const ASPECT_RATIO: f64 = 1.0;
-    const SAMPLES_PER_PIXEL: u32 = 500;
-    const MAX_BOUNCE_DEPTH: u32 = 50;
+    const SAMPLES_PER_PIXEL: u32 = 1500;
+    const MAX_BOUNCE_DEPTH: u32 = 80;
     const V_FOV: f64 = 40.0;
     const CENTER: Point3<f64> = Point3::new(278.0, 278.0, -800.0);
     const LOOK_AT: Point3<f64> = Point3::new(278.0, 278.0, 0.0);
