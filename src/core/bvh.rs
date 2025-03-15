@@ -136,8 +136,16 @@ impl HittableObject for BvhTree {
 }
 
 impl From<Vec<HittableObjectType>> for BvhTree {
-    fn from(mut value: Vec<HittableObjectType>) -> Self {
+    fn from(value: Vec<HittableObjectType>) -> Self {
         assert!(!value.is_empty());
+        let mut value = if value
+            .iter()
+            .any(|obj| matches!(obj, HittableObjectType::HittableObjectList(_)))
+        {
+            HittableObjectsList::flatten_hittable_objects_list(&value)
+        } else {
+            value
+        };
         let mut nodes = Vec::new();
         nodes.push(BvhValue::Node(BvhNode::empty()));
         let end = value.len();

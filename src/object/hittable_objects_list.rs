@@ -7,7 +7,6 @@ use super::{
     HittableObjectType,
 };
 
-// TODO: after introducing BvhTree it seems like this struct should be removed
 #[derive(Clone)]
 pub struct HittableObjectsList {
     items: Vec<HittableObjectType>,
@@ -29,6 +28,21 @@ impl HittableObjectsList {
 
     pub fn items(&self) -> &[HittableObjectType] {
         &self.items
+    }
+
+    /// Returns flat vector of all elements stored inside `HittableObjectsList`
+    pub fn items_flat(&self) -> Vec<HittableObjectType> {
+        Self::flatten_hittable_objects_list(self.items())
+    }
+
+    /// Returns flat vector of all elements stored inside `objs`
+    pub fn flatten_hittable_objects_list(objs: &[HittableObjectType]) -> Vec<HittableObjectType> {
+        objs.iter()
+            .flat_map(|item| match item {
+                HittableObjectType::HittableObjectList(list) => list.items_flat(),
+                _ => vec![item.clone()],
+            })
+            .collect::<Vec<_>>()
     }
 }
 
