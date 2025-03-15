@@ -4,7 +4,10 @@ use nalgebra::{Point3, Unit, UnitVector3, Vector3};
 
 use crate::{core::aabb::AxisAlignedBoundingBox, ray::Ray};
 
-use super::hittable_object::{HitRecord, HittableObject};
+use super::{
+    hittable_object::{HitRecord, HittableObject},
+    hittable_objects_list::HittableObjectsList,
+};
 
 /// `Quad` represents 2D quadrilateral (actually parallelogram, but quad sounds better).
 /// Representation is as follows:
@@ -51,6 +54,63 @@ impl Quad {
             plane_d,
             w,
         }
+    }
+
+    /// Returns `HittableObjectsList` that contains 6 quads, which creates cuboid.
+    ///
+    /// This cuboid is built on two opposite vertices - `start` and `end`.
+    pub fn cuboid(start: Point3<f64>, end: Point3<f64>, material_id: usize) -> HittableObjectsList {
+        let min_vertex = Point3::new(start.x.min(end.x), start.y.min(end.y), start.z.min(end.z));
+        let max_vertex = Point3::new(start.x.max(end.x), start.y.max(end.y), start.z.max(end.z));
+
+        let dx = Vector3::new(max_vertex.x - min_vertex.x, 0.0, 0.0);
+        let dy = Vector3::new(0.0, max_vertex.y - min_vertex.y, 0.0);
+        let dz = Vector3::new(0.0, 0.0, max_vertex.z - min_vertex.z);
+
+        let front = Quad::new(
+            Point3::new(min_vertex.x, min_vertex.y, max_vertex.z),
+            dx,
+            dy,
+            material_id,
+        )
+        .into();
+        let right = Quad::new(
+            Point3::new(max_vertex.x, min_vertex.y, max_vertex.z),
+            -dz,
+            dy,
+            material_id,
+        )
+        .into();
+        let back = Quad::new(
+            Point3::new(max_vertex.x, min_vertex.y, min_vertex.z),
+            -dx,
+            dy,
+            material_id,
+        )
+        .into();
+        let left = Quad::new(
+            Point3::new(min_vertex.x, min_vertex.y, min_vertex.z),
+            dz,
+            dy,
+            material_id,
+        )
+        .into();
+        let top = Quad::new(
+            Point3::new(min_vertex.x, max_vertex.y, max_vertex.z),
+            dx,
+            -dz,
+            material_id,
+        )
+        .into();
+        let bottom = Quad::new(
+            Point3::new(min_vertex.x, min_vertex.y, min_vertex.z),
+            dx,
+            dz,
+            material_id,
+        )
+        .into();
+
+        vec![front, right, back, left, top, bottom].into()
     }
 }
 
