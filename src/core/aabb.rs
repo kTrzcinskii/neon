@@ -183,4 +183,12 @@ impl AxisAlignedBoundingBox {
         }
         *range.start()..=(*range.end() + DELTA.abs())
     }
+
+    pub fn interval(&self, axis: Axis) -> &RangeInclusive<f64> {
+        match axis {
+            Axis::X => &self.interval_x,
+            Axis::Y => &self.interval_y,
+            Axis::Z => &self.interval_z,
+        }
+    }
 }

@@ -4,6 +4,7 @@ use hittable_object::HittableObject;
 use hittable_objects_list::HittableObjectsList;
 use moving_sphere::MovingSphere;
 use quad::Quad;
+use rotate_y_decorator::RotateYDecorator;
 use sphere::Sphere;
 use translate_decorator::TranslateDecorator;
 
@@ -13,6 +14,7 @@ pub mod hittable_object;
 pub mod hittable_objects_list;
 pub mod moving_sphere;
 pub mod quad;
+pub mod rotate_y_decorator;
 pub mod sphere;
 pub mod translate_decorator;
 
@@ -23,6 +25,7 @@ pub enum HittableObjectType {
     Quad(Quad),
     HittableObjectList(HittableObjectsList),
     TranslateDecorator(TranslateDecorator),
+    RotateYDecorator(RotateYDecorator),
 }
 
 impl HittableObject for HittableObjectType {
@@ -37,6 +40,9 @@ impl HittableObject for HittableObjectType {
             HittableObjectType::TranslateDecorator(translate_decorator) => {
                 translate_decorator.hit(ray, t_range)
             }
+            HittableObjectType::RotateYDecorator(rotate_y_decorator) => {
+                rotate_y_decorator.hit(ray, t_range)
+            }
         }
     }
 
@@ -50,6 +56,9 @@ impl HittableObject for HittableObjectType {
             }
             HittableObjectType::TranslateDecorator(translate_decorator) => {
                 translate_decorator.bounding_box()
+            }
+            HittableObjectType::RotateYDecorator(rotate_y_decorator) => {
+                rotate_y_decorator.bounding_box()
             }
         }
     }
@@ -82,5 +91,11 @@ impl From<HittableObjectsList> for HittableObjectType {
 impl From<TranslateDecorator> for HittableObjectType {
     fn from(value: TranslateDecorator) -> Self {
         HittableObjectType::TranslateDecorator(value)
+    }
+}
+
+impl From<RotateYDecorator> for HittableObjectType {
+    fn from(value: RotateYDecorator) -> Self {
+        HittableObjectType::RotateYDecorator(value)
     }
 }
