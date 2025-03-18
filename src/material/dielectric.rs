@@ -7,6 +7,7 @@ use crate::{
 
 use super::{Material, MaterialScattering};
 
+#[derive(Clone)]
 pub struct Dielectric {
     /// Refraction index in vacuum (or air), in case if material is inside enclosing media with
     /// its refraction index != 1, then this property should be a ratio of material's refractio index

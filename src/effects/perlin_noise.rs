@@ -5,6 +5,7 @@ use crate::utils::random_vector_generator;
 
 const PERLIN_POINTS_COUNT: usize = 256;
 
+#[derive(Clone)]
 pub struct PerlinNoise {
     perm_x: Box<[usize; PERLIN_POINTS_COUNT]>,
     perm_y: Box<[usize; PERLIN_POINTS_COUNT]>,

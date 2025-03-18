@@ -7,6 +7,7 @@ use crate::{
 
 use super::{Material, MaterialScattering};
 
+#[derive(Clone)]
 pub struct Metal {
     albedo: Rgb<f64>,
     /// Reflected ray can be randomized by fuzziness factor,

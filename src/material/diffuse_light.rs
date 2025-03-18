@@ -9,6 +9,7 @@ use crate::{
 
 use super::{Material, MaterialScattering};
 
+#[derive(Clone)]
 pub struct DiffuseLight {
     texture: TextureType,
 }

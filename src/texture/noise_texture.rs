@@ -5,6 +5,7 @@ use crate::effects::perlin_noise::PerlinNoise;
 
 use super::Texture;
 
+#[derive(Clone)]
 pub struct NoiseTexture {
     perlin_noise: PerlinNoise,
     scale: f64,

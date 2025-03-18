@@ -8,6 +8,7 @@ use crate::{
 
 use super::{Material, MaterialScattering};
 
+#[derive(Clone)]
 pub struct Isotropic {
     texture: TextureType,
 }

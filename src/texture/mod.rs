@@ -14,6 +14,7 @@ pub trait Texture {
     fn color_at(&self, u: f64, v: f64, p: &Point3<f64>) -> Rgb<f64>;
 }
 
+#[derive(Clone)]
 pub enum TextureType {
     NonRecursive(NonRecursiveTexture),
     CheckerTexture(CheckerTexture),
@@ -60,6 +61,7 @@ impl From<NoiseTexture> for TextureType {
     }
 }
 
+#[derive(Clone)]
 pub enum NonRecursiveTexture {
     SolidColor(SolidColor),
     ImageTexture(ImageTexture),

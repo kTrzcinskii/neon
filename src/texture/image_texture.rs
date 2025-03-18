@@ -7,6 +7,7 @@ use rgb::Rgb;
 
 use super::Texture;
 
+#[derive(Clone)]
 pub struct ImageTexture {
     img: RgbImage,
 }

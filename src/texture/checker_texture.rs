@@ -3,6 +3,7 @@ use rgb::Rgb;
 
 use super::{NonRecursiveTexture, Texture};
 
+#[derive(Clone)]
 pub struct CheckerTexture {
     inversed_scale: f64,
     even_texture: NonRecursiveTexture,

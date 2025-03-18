@@ -3,6 +3,7 @@ use rgb::Rgb;
 
 use super::Texture;
 
+#[derive(Clone)]
 pub struct SolidColor {
     albedo: Rgb<f64>,
 }

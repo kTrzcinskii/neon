@@ -22,6 +22,7 @@ pub trait Material {
     }
 }
 
+#[derive(Clone)]
 pub enum MaterialType {
     Lambertian(Lambertian),
     Metal(Metal),
