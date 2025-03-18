@@ -67,6 +67,11 @@ pub fn refracted_ray(
     Some(Ray::new(*hit_record.pos(), refracted_direction, ray.time()))
 }
 
+pub fn ray_in_random_unit_direction(ray: &Ray, hit_record: &HitRecord) -> Ray {
+    let direction = random_vector_generator::random_unit_vector3_in_sphere();
+    Ray::new(*hit_record.pos(), direction.into_inner(), ray.time())
+}
+
 /// Uses schlick approximation to calculate reflectance, which is probabilty that the light would reflect.
 fn schlick_reflectance(cos_theta: f64, refraction_index: f64) -> f64 {
     let r_0_sqrt = (1.0 - refraction_index) / (1.0 + refraction_index);

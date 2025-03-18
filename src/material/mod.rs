@@ -1,10 +1,12 @@
 pub mod dielectric;
 pub mod diffuse_light;
+pub mod isotropic;
 pub mod lambertian;
 pub mod metal;
 
 use dielectric::Dielectric;
 use diffuse_light::DiffuseLight;
+use isotropic::Isotropic;
 use lambertian::Lambertian;
 use metal::Metal;
 use nalgebra::Point3;
@@ -25,6 +27,7 @@ pub enum MaterialType {
     Metal(Metal),
     Dielectric(Dielectric),
     DiffuseLight(DiffuseLight),
+    Isotropic(Isotropic),
 }
 
 impl Material for MaterialType {
@@ -34,6 +37,7 @@ impl Material for MaterialType {
             MaterialType::Metal(metal) => metal.scatter(ray, hit_record),
             MaterialType::Dielectric(dielectric) => dielectric.scatter(ray, hit_record),
             MaterialType::DiffuseLight(diffuse_light) => diffuse_light.scatter(ray, hit_record),
+            MaterialType::Isotropic(isotropic) => isotropic.scatter(ray, hit_record),
         }
     }
 
@@ -43,6 +47,7 @@ impl Material for MaterialType {
             MaterialType::Metal(metal) => metal.emitted(u, v, pos),
             MaterialType::Dielectric(dielectric) => dielectric.emitted(u, v, pos),
             MaterialType::DiffuseLight(diffuse_light) => diffuse_light.emitted(u, v, pos),
+            MaterialType::Isotropic(isotropic) => isotropic.emitted(u, v, pos),
         }
     }
 }
@@ -68,6 +73,12 @@ impl From<Dielectric> for MaterialType {
 impl From<DiffuseLight> for MaterialType {
     fn from(value: DiffuseLight) -> Self {
         Self::DiffuseLight(value)
+    }
+}
+
+impl From<Isotropic> for MaterialType {
+    fn from(value: Isotropic) -> Self {
+        Self::Isotropic(value)
     }
 }
 
