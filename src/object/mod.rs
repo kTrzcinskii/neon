@@ -1,5 +1,6 @@
 use std::ops::RangeInclusive;
 
+use constant_density_medium::ConstantDensityMedium;
 use hittable_object::HittableObject;
 use hittable_objects_list::HittableObjectsList;
 use moving_sphere::MovingSphere;
@@ -10,6 +11,7 @@ use translate_decorator::TranslateDecorator;
 
 use crate::{core::aabb::AxisAlignedBoundingBox, ray::Ray};
 
+pub mod constant_density_medium;
 pub mod hittable_object;
 pub mod hittable_objects_list;
 pub mod moving_sphere;
@@ -26,6 +28,7 @@ pub enum HittableObjectType {
     HittableObjectList(HittableObjectsList),
     TranslateDecorator(TranslateDecorator),
     RotateYDecorator(RotateYDecorator),
+    ConstantDensityMedium(ConstantDensityMedium),
 }
 
 impl HittableObject for HittableObjectType {
@@ -43,6 +46,9 @@ impl HittableObject for HittableObjectType {
             HittableObjectType::RotateYDecorator(rotate_y_decorator) => {
                 rotate_y_decorator.hit(ray, t_range)
             }
+            HittableObjectType::ConstantDensityMedium(constant_density_medium) => {
+                constant_density_medium.hit(ray, t_range)
+            }
         }
     }
 
@@ -59,6 +65,9 @@ impl HittableObject for HittableObjectType {
             }
             HittableObjectType::RotateYDecorator(rotate_y_decorator) => {
                 rotate_y_decorator.bounding_box()
+            }
+            HittableObjectType::ConstantDensityMedium(constant_density_medium) => {
+                constant_density_medium.bounding_box()
             }
         }
     }
@@ -97,5 +106,11 @@ impl From<TranslateDecorator> for HittableObjectType {
 impl From<RotateYDecorator> for HittableObjectType {
     fn from(value: RotateYDecorator) -> Self {
         HittableObjectType::RotateYDecorator(value)
+    }
+}
+
+impl From<ConstantDensityMedium> for HittableObjectType {
+    fn from(value: ConstantDensityMedium) -> Self {
+        HittableObjectType::ConstantDensityMedium(value)
     }
 }
