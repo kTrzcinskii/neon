@@ -41,7 +41,7 @@ cargo build --release
 Run the renderer:
 
 ```bash
-cargo run --release [output] [scene]
+cargo run --release [output] [scene] [samples_per_pixel]
 ```
 
 Where:
@@ -57,6 +57,7 @@ Where:
     - fog_cornell_box
     - all_effects
 - `output` is path to output file. This repo uses [image crate](https://docs.rs/image/latest/image/) for image handling and you can check supported file formats [here](https://docs.rs/image/latest/image/fn.save_buffer.html).
+- `samples_per_pixel` is `u32` representing how many rays are sampled per each pixel (the bigger the value the more accurate the final image). This argument is optional and each scene has its predefined default value.
 
 Example:
 
@@ -65,6 +66,12 @@ cargo run --release output.jpg "all_effects"
 ```
 
 This will generate a file named `output.jpg` in the project directory.
+
+```bash
+cargo run --release output.jpg "all_effects" 256
+```
+
+This will generate same file, but will use only 256 rays per pixel for this scene (default value is `5000`).
 
 ## Implementation Notes
 
