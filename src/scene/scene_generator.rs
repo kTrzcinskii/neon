@@ -9,9 +9,9 @@ use crate::{
         lambertian::Lambertian, metal::Metal, MaterialType,
     },
     object::{
-        constant_density_medium::ConstantDensityMedium, moving_sphere::MovingSphere, quad::Quad,
-        rotate_y_decorator::RotateYDecorator, sphere::Sphere,
-        translate_decorator::TranslateDecorator, HittableObjectType,
+        constant_density_medium::ConstantDensityMedium, hittable_objects_list::HittableObjectsList,
+        moving_sphere::MovingSphere, quad::Quad, rotate_y_decorator::RotateYDecorator,
+        sphere::Sphere, translate_decorator::TranslateDecorator, HittableObjectType,
     },
     scene::SceneOptions,
     texture::{
@@ -486,6 +486,128 @@ pub fn scene_with_fog_cornell_box() -> Scene {
     const MAX_BOUNCE_DEPTH: u32 = 80;
     const V_FOV: f64 = 40.0;
     const CENTER: Point3<f64> = Point3::new(278.0, 278.0, -800.0);
+    const LOOK_AT: Point3<f64> = Point3::new(278.0, 278.0, 0.0);
+    let camera = Camera::builder()
+        .width(WIDTH)
+        .aspect_ratio(ASPECT_RATIO)
+        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .max_bounce_depth(MAX_BOUNCE_DEPTH)
+        .vertical_fov_angles(V_FOV)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .build();
+
+    let options = SceneOptions::builder()
+        .background(Rgb::new(0.0, 0.0, 0.0))
+        .build();
+
+    Scene::new(content, camera, options)
+}
+
+pub fn scene_with_all_effects() -> Scene {
+    let mut materials: Vec<MaterialType> = vec![];
+    let mut objects: Vec<HittableObjectType> = vec![];
+
+    // Ground
+    let ground = Lambertian::from(Rgb::new(0.48, 0.83, 0.53)).into();
+    materials.push(ground);
+
+    const BOXES_PER_SIDE: usize = 20;
+
+    let mut rng = rand::rng();
+    (0..BOXES_PER_SIDE).for_each(|i| {
+        (0..BOXES_PER_SIDE).for_each(|j| {
+            let i = i as f64;
+            let j = j as f64;
+            let w = 100.0;
+            let x0 = -1000.0 + i * w;
+            let z0 = -1000.0 + j * w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = rng.random_range(1.0..=101.0);
+            let z1 = z0 + w;
+
+            let new_box = Quad::cuboid(
+                Point3::new(x0, y0, z0),
+                Point3::new(x1, y1, z1),
+                materials.len() - 1,
+            );
+            objects.push(new_box.into());
+        });
+    });
+
+    // Light source
+    let diffuse_light = DiffuseLight::from(Rgb::new(7.0, 7.0, 7.0)).into();
+    materials.push(diffuse_light);
+    let light_source = Quad::new(
+        Point3::new(123.0, 554.0, 147.0),
+        Vector3::new(300.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 265.0),
+        materials.len() - 1,
+    )
+    .into();
+    objects.push(light_source);
+
+    // Moving sphere
+    let moving_sphere_material = Lambertian::from(Rgb::new(0.7, 0.3, 0.1)).into();
+    materials.push(moving_sphere_material);
+    let from = Point3::new(400.0, 400.0, 200.0);
+    let to = from + Vector3::new(30.0, 0.0, 0.0);
+    let moving_sphere = MovingSphere::new(from, to, 50.0, materials.len() - 1).into();
+    objects.push(moving_sphere);
+
+    // Glass sphere
+    let glass_material = Dielectric::new(1.5).into();
+    materials.push(glass_material);
+    let glass_sphere =
+        Sphere::new(Point3::new(260.0, 150.0, 45.0), 50.0, materials.len() - 1).into();
+    objects.push(glass_sphere);
+
+    // Metal sphere
+    let metal_material = Metal::new(Rgb::new(0.8, 0.8, 0.9), 1.0).into();
+    materials.push(metal_material);
+    let material_sphere =
+        Sphere::new(Point3::new(0.0, 150.0, 145.0), 50.0, materials.len() - 1).into();
+    objects.push(material_sphere);
+
+    // Earth sphere
+    let earth_texture =
+        Lambertian::new(ImageTexture::new("./assets/earthmap.jpg").unwrap().into()).into();
+    materials.push(earth_texture);
+    let earth_sphere =
+        Sphere::new(Point3::new(400.0, 200.0, 400.0), 100.0, materials.len() - 1).into();
+    objects.push(earth_sphere);
+
+    // Perlin noise sphere
+    let perlin_noise_texture = Lambertian::new(NoiseTexture::new(0.2).into()).into();
+    materials.push(perlin_noise_texture);
+    let perlin_noise_sphere =
+        Sphere::new(Point3::new(220.0, 280.0, 300.0), 80.0, materials.len() - 1).into();
+    objects.push(perlin_noise_sphere);
+
+    // Stacked spheres
+    let white = Lambertian::from(Rgb::new(0.73, 0.73, 0.73)).into();
+    materials.push(white);
+    const STACKED_SPHERES_SIZE: usize = 1000;
+    let stacked: Vec<HittableObjectType> = (0..STACKED_SPHERES_SIZE)
+        .map(|_| {
+            let center = Point3::from(random_vector_generator::random_vector3(0.0..166.0));
+            Sphere::new(center, 10.0, materials.len() - 1).into()
+        })
+        .collect();
+    let stacked = HittableObjectsList::from(stacked).into();
+    let stacked = RotateYDecorator::new(stacked, 15.0).into();
+    let stacked = TranslateDecorator::new(stacked, Vector3::new(-100.0, 270.0, 395.0)).into();
+    objects.push(stacked);
+
+    let content = SceneContent::new(materials, objects.into());
+
+    const WIDTH: u32 = 800;
+    const ASPECT_RATIO: f64 = 1.0;
+    const SAMPLES_PER_PIXEL: u32 = 5000;
+    const MAX_BOUNCE_DEPTH: u32 = 80;
+    const V_FOV: f64 = 40.0;
+    const CENTER: Point3<f64> = Point3::new(478.0, 278.0, -600.0);
     const LOOK_AT: Point3<f64> = Point3::new(278.0, 278.0, 0.0);
     let camera = Camera::builder()
         .width(WIDTH)
