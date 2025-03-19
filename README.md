@@ -54,7 +54,7 @@ Where:
     - quads
     - simple_light
     - cornell_box
-    - for_cornell_box
+    - fog_cornell_box
     - all_effects
 - `output` is path to output file. This repo uses [image crate](https://docs.rs/image/latest/image/) for image handling and you can check supported file formats [here](https://docs.rs/image/latest/image/fn.save_buffer.html).
 
