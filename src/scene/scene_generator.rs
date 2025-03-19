@@ -23,7 +23,7 @@ use crate::{
 
 use super::{Scene, SceneContent};
 
-pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
+pub fn scene_with_spheres(rows: usize, cols: usize, samples_per_pixel: Option<u32>) -> Scene {
     // Materials
     let mut materials = generate_random_materials(rows, cols);
     let material_ground = Lambertian::from(Rgb::new(0.5, 0.5, 0.5)).into();
@@ -43,11 +43,15 @@ pub fn scene_with_spheres(rows: usize, cols: usize) -> Scene {
     world.push(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, materials.len() - 1).into());
 
     let content = SceneContent::new(materials, world.into());
-    let camera = build_camera_for_spheres();
+    let camera = build_camera_for_spheres(samples_per_pixel);
     Scene::new(content, camera, Default::default())
 }
 
-pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
+pub fn scene_with_moving_spheres(
+    rows: usize,
+    cols: usize,
+    samples_per_pixel: Option<u32>,
+) -> Scene {
     // Materials
     let mut materials = generate_random_materials(rows, cols);
     let checker_even = SolidColor::new(Rgb::new(0.2, 0.3, 0.1));
@@ -70,11 +74,11 @@ pub fn scene_with_moving_spheres(rows: usize, cols: usize) -> Scene {
     world.push(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, materials.len() - 1).into());
 
     let content = SceneContent::new(materials, world.into());
-    let camera = build_camera_for_spheres();
+    let camera = build_camera_for_spheres(samples_per_pixel);
     Scene::new(content, camera, Default::default())
 }
 
-pub fn scene_with_two_checker_spheres() -> Scene {
+pub fn scene_with_two_checker_spheres(samples_per_pixel: Option<u32>) -> Scene {
     // Materials
     let checker_even = SolidColor::new(Rgb::new(0.2, 0.3, 0.1));
     let checker_odd = SolidColor::new(Rgb::new(0.9, 0.9, 0.9));
@@ -93,7 +97,7 @@ pub fn scene_with_two_checker_spheres() -> Scene {
     // Camera
     const WIDTH: u32 = 1200;
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const SAMPLES_PER_PIXEL: u32 = 100;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 100;
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 20.0;
     const CENTER: Point3<f64> = Point3::new(13.0, 2.0, 3.0);
@@ -101,7 +105,7 @@ pub fn scene_with_two_checker_spheres() -> Scene {
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
@@ -111,7 +115,7 @@ pub fn scene_with_two_checker_spheres() -> Scene {
     Scene::new(content, camera, Default::default())
 }
 
-pub fn scene_with_earthmap() -> Scene {
+pub fn scene_with_earthmap(samples_per_pixel: Option<u32>) -> Scene {
     let earh_texture = ImageTexture::new("assets/earthmap.jpg").unwrap();
     let globe_material = Lambertian::new(earh_texture.into()).into();
     let materials = vec![globe_material];
@@ -121,7 +125,7 @@ pub fn scene_with_earthmap() -> Scene {
 
     const WIDTH: u32 = 1200;
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const SAMPLES_PER_PIXEL: u32 = 100;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 100;
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 20.0;
     const CENTER: Point3<f64> = Point3::new(12.0, 0.3, 0.0);
@@ -129,7 +133,7 @@ pub fn scene_with_earthmap() -> Scene {
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
@@ -139,7 +143,7 @@ pub fn scene_with_earthmap() -> Scene {
     Scene::new(content, camera, Default::default())
 }
 
-pub fn scene_with_perlin_noise() -> Scene {
+pub fn scene_with_perlin_noise(samples_per_pixel: Option<u32>) -> Scene {
     let materials = vec![Lambertian::new(NoiseTexture::new(4.0).into()).into()];
     let bigger = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, 0).into();
     let smaller = Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, 0).into();
@@ -148,7 +152,7 @@ pub fn scene_with_perlin_noise() -> Scene {
 
     const WIDTH: u32 = 1200;
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const SAMPLES_PER_PIXEL: u32 = 100;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 100;
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 20.0;
     const CENTER: Point3<f64> = Point3::new(13.0, 2.0, 3.0);
@@ -156,7 +160,7 @@ pub fn scene_with_perlin_noise() -> Scene {
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
@@ -166,7 +170,7 @@ pub fn scene_with_perlin_noise() -> Scene {
     Scene::new(content, camera, Default::default())
 }
 
-pub fn scene_with_quads() -> Scene {
+pub fn scene_with_quads(samples_per_pixel: Option<u32>) -> Scene {
     let left_red: MaterialType = Lambertian::from(Rgb::new(1.0, 0.2, 0.2)).into();
     let back_green: MaterialType = Lambertian::from(Rgb::new(0.2, 1.0, 0.2)).into();
     let right_blue: MaterialType = Lambertian::from(Rgb::new(0.2, 0.2, 1.0)).into();
@@ -215,7 +219,7 @@ pub fn scene_with_quads() -> Scene {
 
     const WIDTH: u32 = 800;
     const ASPECT_RATIO: f64 = 1.0;
-    const SAMPLES_PER_PIXEL: u32 = 100;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 100;
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 80.0;
     const CENTER: Point3<f64> = Point3::new(0.0, 0.0, 9.0);
@@ -223,7 +227,7 @@ pub fn scene_with_quads() -> Scene {
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
@@ -233,7 +237,7 @@ pub fn scene_with_quads() -> Scene {
     Scene::new(content, camera, Default::default())
 }
 
-pub fn scene_with_simple_light() -> Scene {
+pub fn scene_with_simple_light(samples_per_pixel: Option<u32>) -> Scene {
     let perlin_texture = Lambertian::new(NoiseTexture::new(4.0).into()).into();
     // Brighter than (1,1,1) to light things around it
     let light = DiffuseLight::from(Rgb::new(4.0, 4.0, 4.0)).into();
@@ -255,7 +259,7 @@ pub fn scene_with_simple_light() -> Scene {
 
     const WIDTH: u32 = 1200;
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const SAMPLES_PER_PIXEL: u32 = 100;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 100;
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 20.0;
     const CENTER: Point3<f64> = Point3::new(26.0, 3.0, 6.0);
@@ -263,7 +267,7 @@ pub fn scene_with_simple_light() -> Scene {
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
@@ -276,7 +280,7 @@ pub fn scene_with_simple_light() -> Scene {
     Scene::new(content, camera, options)
 }
 
-pub fn scene_with_cornell_box() -> Scene {
+pub fn scene_with_cornell_box(samples_per_pixel: Option<u32>) -> Scene {
     let light = DiffuseLight::from(Rgb::new(15.0, 15.0, 15.0)).into();
     let red = Lambertian::from(Rgb::new(0.65, 0.05, 0.05)).into();
     let white = Lambertian::from(Rgb::new(0.73, 0.73, 0.73)).into();
@@ -366,7 +370,7 @@ pub fn scene_with_cornell_box() -> Scene {
 
     const WIDTH: u32 = 800;
     const ASPECT_RATIO: f64 = 1.0;
-    const SAMPLES_PER_PIXEL: u32 = 1500;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 1500;
     const MAX_BOUNCE_DEPTH: u32 = 80;
     const V_FOV: f64 = 40.0;
     const CENTER: Point3<f64> = Point3::new(278.0, 278.0, -800.0);
@@ -374,7 +378,7 @@ pub fn scene_with_cornell_box() -> Scene {
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
@@ -388,7 +392,7 @@ pub fn scene_with_cornell_box() -> Scene {
     Scene::new(content, camera, options)
 }
 
-pub fn scene_with_fog_cornell_box() -> Scene {
+pub fn scene_with_fog_cornell_box(samples_per_pixel: Option<u32>) -> Scene {
     let light = DiffuseLight::from(Rgb::new(15.0, 15.0, 15.0)).into();
     let red = Lambertian::from(Rgb::new(0.65, 0.05, 0.05)).into();
     let white = Lambertian::from(Rgb::new(0.73, 0.73, 0.73)).into();
@@ -482,7 +486,7 @@ pub fn scene_with_fog_cornell_box() -> Scene {
 
     const WIDTH: u32 = 800;
     const ASPECT_RATIO: f64 = 1.0;
-    const SAMPLES_PER_PIXEL: u32 = 2500;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 2500;
     const MAX_BOUNCE_DEPTH: u32 = 80;
     const V_FOV: f64 = 40.0;
     const CENTER: Point3<f64> = Point3::new(278.0, 278.0, -800.0);
@@ -490,7 +494,7 @@ pub fn scene_with_fog_cornell_box() -> Scene {
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
@@ -504,7 +508,7 @@ pub fn scene_with_fog_cornell_box() -> Scene {
     Scene::new(content, camera, options)
 }
 
-pub fn scene_with_all_effects() -> Scene {
+pub fn scene_with_all_effects(samples_per_pixel: Option<u32>) -> Scene {
     let mut materials: Vec<MaterialType> = vec![];
     let mut objects: Vec<HittableObjectType> = vec![];
 
@@ -604,7 +608,7 @@ pub fn scene_with_all_effects() -> Scene {
 
     const WIDTH: u32 = 800;
     const ASPECT_RATIO: f64 = 1.0;
-    const SAMPLES_PER_PIXEL: u32 = 5000;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 5000;
     const MAX_BOUNCE_DEPTH: u32 = 80;
     const V_FOV: f64 = 40.0;
     const CENTER: Point3<f64> = Point3::new(478.0, 278.0, -600.0);
@@ -612,7 +616,7 @@ pub fn scene_with_all_effects() -> Scene {
     let camera = Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
@@ -695,10 +699,10 @@ fn generate_random_moving_spheres(rows: usize, cols: usize) -> Vec<HittableObjec
     output
 }
 
-fn build_camera_for_spheres() -> Camera {
+fn build_camera_for_spheres(samples_per_pixel: Option<u32>) -> Camera {
     const WIDTH: u32 = 1200;
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const SAMPLES_PER_PIXEL: u32 = 500;
+    const DEFAULT_SAMPLES_PER_PIXEL: u32 = 500;
     const MAX_BOUNCE_DEPTH: u32 = 50;
     const V_FOV: f64 = 20.0;
     const CENTER: Point3<f64> = Point3::new(13.0, 2.0, 3.0);
@@ -708,7 +712,7 @@ fn build_camera_for_spheres() -> Camera {
     Camera::builder()
         .width(WIDTH)
         .aspect_ratio(ASPECT_RATIO)
-        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .samples_per_pixel(samples_per_pixel.unwrap_or(DEFAULT_SAMPLES_PER_PIXEL))
         .max_bounce_depth(MAX_BOUNCE_DEPTH)
         .vertical_fov_angles(V_FOV)
         .center(CENTER)
