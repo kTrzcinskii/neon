@@ -17,13 +17,13 @@ fn main() -> Result<()> {
         "spheres" => scene_generator::scene_with_spheres(24, 24),
         "moving_spheres" => scene_generator::scene_with_moving_spheres(24, 24),
         "two_checker" => scene_generator::scene_with_two_checker_spheres(),
-        "scene_with_earthmap" => scene_generator::scene_with_earthmap(),
+        "earthmap" => scene_generator::scene_with_earthmap(),
         "perlin_noise" => scene_generator::scene_with_perlin_noise(),
         "quads" => scene_generator::scene_with_quads(),
         "simple_light" => scene_generator::scene_with_simple_light(),
         "cornell_box" => scene_generator::scene_with_cornell_box(),
         "fog_cornell_box" => scene_generator::scene_with_fog_cornell_box(),
-        "all" => scene_generator::scene_with_all_effects(),
+        "all_effects" => scene_generator::scene_with_all_effects(),
         _ => bail!("unknown scene"),
     };
 
