@@ -5,12 +5,13 @@ use rgb::Rgb;
 use crate::{
     core::{bvh::BvhTree, camera::Camera},
     material::{
-        dielectric::Dielectric, diffuse_light::DiffuseLight, lambertian::Lambertian, metal::Metal,
-        MaterialType,
+        dielectric::Dielectric, diffuse_light::DiffuseLight, isotropic::Isotropic,
+        lambertian::Lambertian, metal::Metal, MaterialType,
     },
     object::{
-        moving_sphere::MovingSphere, quad::Quad, rotate_y_decorator::RotateYDecorator,
-        sphere::Sphere, translate_decorator::TranslateDecorator, HittableObjectType,
+        constant_density_medium::ConstantDensityMedium, moving_sphere::MovingSphere, quad::Quad,
+        rotate_y_decorator::RotateYDecorator, sphere::Sphere,
+        translate_decorator::TranslateDecorator, HittableObjectType,
     },
     scene::SceneOptions,
     texture::{
@@ -366,6 +367,122 @@ pub fn scene_with_cornell_box() -> Scene {
     const WIDTH: u32 = 800;
     const ASPECT_RATIO: f64 = 1.0;
     const SAMPLES_PER_PIXEL: u32 = 1500;
+    const MAX_BOUNCE_DEPTH: u32 = 80;
+    const V_FOV: f64 = 40.0;
+    const CENTER: Point3<f64> = Point3::new(278.0, 278.0, -800.0);
+    const LOOK_AT: Point3<f64> = Point3::new(278.0, 278.0, 0.0);
+    let camera = Camera::builder()
+        .width(WIDTH)
+        .aspect_ratio(ASPECT_RATIO)
+        .samples_per_pixel(SAMPLES_PER_PIXEL)
+        .max_bounce_depth(MAX_BOUNCE_DEPTH)
+        .vertical_fov_angles(V_FOV)
+        .center(CENTER)
+        .look_at(LOOK_AT)
+        .build();
+
+    let options = SceneOptions::builder()
+        .background(Rgb::new(0.0, 0.0, 0.0))
+        .build();
+
+    Scene::new(content, camera, options)
+}
+
+pub fn scene_with_fog_cornell_box() -> Scene {
+    let light = DiffuseLight::from(Rgb::new(15.0, 15.0, 15.0)).into();
+    let red = Lambertian::from(Rgb::new(0.65, 0.05, 0.05)).into();
+    let white = Lambertian::from(Rgb::new(0.73, 0.73, 0.73)).into();
+    let green = Lambertian::from(Rgb::new(0.12, 0.45, 0.15)).into();
+    let isotropic_white = Isotropic::from(Rgb::new(1.0, 1.0, 1.0)).into();
+    let isotropic_black = Isotropic::from(Rgb::new(0.0, 0.0, 0.0)).into();
+    let materials = vec![light, red, white, green, isotropic_white, isotropic_black];
+
+    let green_quad = Quad::new(
+        Point3::new(555.0, 0.0, 0.0),
+        Vector3::new(0.0, 555.0, 0.0),
+        Vector3::new(0.0, 0.0, 555.0),
+        3,
+    )
+    .into();
+
+    let red_quad = Quad::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vector3::new(0.0, 555.0, 0.0),
+        Vector3::new(0.0, 0.0, 555.0),
+        1,
+    )
+    .into();
+
+    let white_bottom_quad = Quad::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vector3::new(555.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 555.0),
+        2,
+    )
+    .into();
+
+    let white_mid_quad = Quad::new(
+        Point3::new(555.0, 555.0, 555.0),
+        Vector3::new(-555.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, -555.0),
+        2,
+    )
+    .into();
+
+    let white_upper_quad = Quad::new(
+        Point3::new(0.0, 0.0, 555.0),
+        Vector3::new(555.0, 0.0, 0.0),
+        Vector3::new(0.0, 555.0, 0.0),
+        2,
+    )
+    .into();
+
+    let light_source = Quad::new(
+        Point3::new(343.0, 554.0, 332.0),
+        Vector3::new(-130.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, -105.0),
+        0,
+    )
+    .into();
+
+    let cuboid_bigger = Quad::cuboid(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
+        2,
+    )
+    .into();
+    let cuboid_bigger = RotateYDecorator::new(cuboid_bigger, 15.0).into();
+    let cuboid_bigger =
+        TranslateDecorator::new(cuboid_bigger, Vector3::new(265.0, 0.0, 295.0)).into();
+    let cuboid_bigger = ConstantDensityMedium::new(Box::new(cuboid_bigger), 0.005, 5).into();
+
+    let cuboid_smaller = Quad::cuboid(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 165.0, 165.0),
+        2,
+    )
+    .into();
+    let cuboid_smaller = RotateYDecorator::new(cuboid_smaller, -18.0).into();
+    let cuboid_smaller =
+        TranslateDecorator::new(cuboid_smaller, Vector3::new(130.0, 0.0, 65.0)).into();
+    let cuboid_smaller = ConstantDensityMedium::new(Box::new(cuboid_smaller), 0.005, 4).into();
+
+    let world = vec![
+        green_quad,
+        red_quad,
+        white_bottom_quad,
+        white_mid_quad,
+        white_upper_quad,
+        light_source,
+        cuboid_smaller,
+        cuboid_bigger,
+    ];
+
+    let content = SceneContent::new(materials, world.into());
+
+    const WIDTH: u32 = 800;
+    const ASPECT_RATIO: f64 = 1.0;
+    const SAMPLES_PER_PIXEL: u32 = 2500;
     const MAX_BOUNCE_DEPTH: u32 = 80;
     const V_FOV: f64 = 40.0;
     const CENTER: Point3<f64> = Point3::new(278.0, 278.0, -800.0);
