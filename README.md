@@ -41,7 +41,7 @@ cargo build --release
 Run the renderer:
 
 ```bash
-cargo run --release -- [output] [scene]
+cargo run --release [output] [scene]
 ```
 
 Where:
